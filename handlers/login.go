@@ -13,7 +13,7 @@ import (
 func Login(c *gin.Context) {
 	var u entities.User
 	m := map[string]interface{}{}
-	results := cassandra.Session.Query("select * from test").Iter()
+	results := cassandra.Session.Query("select * from emp").Iter()
 	var uid gocql.UUID
 	var uname string
 	for results.MapScan(m) {
