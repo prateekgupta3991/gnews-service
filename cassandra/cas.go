@@ -14,6 +14,7 @@ func init() {
 	cluster.Keyspace = "godemo"
 	Session, err = cluster.CreateSession()
 	if err != nil {
+		fmt.Println(err)
 		panic(err)
 	}
 	fmt.Println("cassandra init done")

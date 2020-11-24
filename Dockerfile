@@ -1,9 +1,9 @@
 FROM golang:1.15
 
 RUN go get -u github.com/gin-gonic/gin
+RUN go get -u github.com/gocql/gocql
 
 ENV GO111MODULE=on
-ENV GOFLAGS=-mod=vendor
 ENV APP_USER app
 ENV APP_HOME /go/src/github.com/prateekgupta3991/refresher
 
