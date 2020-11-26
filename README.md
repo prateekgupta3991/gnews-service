@@ -32,3 +32,10 @@ Create table
 
 Insert data
 > insert into emp(id, name) values (uuid(), 'Prateek Gupta');
+
+For running in your system, update the ip in cas.go file to your system ip via ifconfig.
+
+Docker commands
+docker build -f Dockerfile .
+docker-compose -f docker-compose.yml build
+docker-compose -f docker-compose.yml up
