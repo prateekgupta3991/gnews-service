@@ -1,19 +1,32 @@
-FROM golang:1.15
+# Dockerfile.deploy
 
-RUN go get -u github.com/gin-gonic/gin
-RUN go get -u github.com/gocql/gocql
+FROM golang:1.14 as builder
 
-ENV GO111MODULE=on
 ENV APP_USER app
 ENV APP_HOME /go/src/github.com/prateekgupta3991/refresher
 
-ARG GROUP_ID
-ARG USER_ID
-
-RUN groupadd --gid $GROUP_ID app && useradd -m -l --uid $USER_ID --gid $GROUP_ID $APP_USER
+RUN groupadd $APP_USER && useradd -m -g $APP_USER -l $APP_USER
 RUN mkdir -p $APP_HOME && chown -R $APP_USER:$APP_USER $APP_HOME
 
-USER $APP_USER
 WORKDIR $APP_HOME
+USER $APP_USER
+COPY . .
+
+RUN go mod download
+RUN go mod verify
+RUN go build -o refresher
+
+FROM debian:buster
+
+ENV APP_USER app
+ENV APP_HOME /go/src/github.com/prateekgupta3991/refresher
+
+RUN groupadd $APP_USER && useradd -m -g $APP_USER -l $APP_USER
+RUN mkdir -p $APP_HOME
+WORKDIR $APP_HOME
+
+COPY --chown=0:0 --from=builder $APP_HOME/refresher $APP_HOME
+
 EXPOSE 8080
-CMD ["go", "run","hello.go"]
+USER $APP_USER
+CMD ["./refresher"]

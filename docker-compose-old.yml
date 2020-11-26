@@ -1,0 +1,22 @@
+version: '3'
+
+services:
+  appplication:
+    image: refresher:1.2.0
+    ports:
+      - "8080:8080"
+    links:
+      - casdb
+    networks:
+      - backend
+  casdb:
+    image: cassandra:3.11
+    ports:
+      - "9042:9042"
+    volumes:
+      - ./data:/data/db
+    networks:
+      - backend
+networks:
+  backend:
+    driver: "bridge"
