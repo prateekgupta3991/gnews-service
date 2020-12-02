@@ -18,8 +18,8 @@ func main() {
 	fmt.Println("Finally back to GO.")
 	var con *configs.Conf
 	var err error
-	if con, err = configs.InitConfig("./configs/conf.dev.json"); err != nil {
-		log.Panic("Error during config initialisation")
+	if con, err = configs.InitConfig("./conf.dev.json"); err != nil {
+		log.Panic("Error during config initialisation : " + err.Error())
 	}
 	CassandraSession := cassandra.Session
 	defer CassandraSession.Close()

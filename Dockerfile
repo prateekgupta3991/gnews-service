@@ -26,6 +26,7 @@ RUN mkdir -p $APP_HOME
 WORKDIR $APP_HOME
 
 COPY --chown=0:0 --from=builder $APP_HOME/refresher $APP_HOME
+COPY --chown=0:0 --from=builder $APP_HOME/configs/conf.dev.json $APP_HOME
 
 EXPOSE 8080
 USER $APP_USER

@@ -39,3 +39,6 @@ Docker commands
 docker build -f Dockerfile .
 docker-compose -f docker-compose.yml build
 docker-compose -f docker-compose.yml up
+
+Debug the docker image
+docker run -it --rm --entrypoint sh <image name>
