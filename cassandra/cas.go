@@ -8,12 +8,11 @@ import (
 
 var Session *gocql.Session
 
-func init() {
+func InitDb(ks string, db []string) {
 	var err error
-	cluster := gocql.NewCluster("172.18.9.140:9042")
-	cluster.Keyspace = "godemo"
-	Session, err = cluster.CreateSession()
-	if err != nil {
+	cluster := gocql.NewCluster("172.18.9.140:9042", "172.18.9.140:9043")
+	cluster.Keyspace = ks
+	if Session, err = cluster.CreateSession(); err != nil {
 		fmt.Println(err)
 		panic(err)
 	}

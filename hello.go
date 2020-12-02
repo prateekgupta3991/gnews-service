@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/prateekgupta3991/refresher/cassandra"
@@ -18,9 +19,11 @@ func main() {
 	fmt.Println("Finally back to GO.")
 	var con *configs.Conf
 	var err error
-	if con, err = configs.InitConfig("./conf.dev.json"); err != nil {
+	if con, err = configs.InitConfig("./configs/conf.dev.json"); err != nil {
 		log.Panic("Error during config initialisation : " + err.Error())
 	}
+	hosts := strings.Split(con.CasDb, ",")
+	cassandra.InitDb(con.Keyspace, hosts)
 	CassandraSession := cassandra.Session
 	defer CassandraSession.Close()
 	router.GET("/login", handlers.Login)
