@@ -10,7 +10,7 @@ var Session *gocql.Session
 
 func InitDb(ks string, db []string) {
 	var err error
-	cluster := gocql.NewCluster("172.18.9.140:9042", "172.18.9.140:9043")
+	cluster := gocql.NewCluster("192.168.119.2:9042", "192.168.119.2:9043")
 	cluster.Keyspace = ks
 	if Session, err = cluster.CreateSession(); err != nil {
 		fmt.Println(err)
