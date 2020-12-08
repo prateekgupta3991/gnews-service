@@ -2,8 +2,10 @@ package clients
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/prateekgupta3991/refresher/entities"
@@ -34,8 +36,22 @@ type Apis interface {
 	GetEverything() (*entities.Everything, error)
 }
 
-func (c *GClient) GetSources() (*entities.NewsSource, error) {
-	req, err := http.NewRequest("GET", "https://newsapi.org/v2/sources?language=en&country=in", nil); if err != nil {
+func prepareUrl(base string, qp map[string][]string) string {
+	var url strings.Builder
+	url.WriteString(base)
+	url.WriteString("?")
+	for idx, val := range qp {
+		for _, value := range val {
+			url.WriteString(fmt.Sprintf("%s=%s", idx, value))
+			url.WriteString("&")
+		}
+	}
+	return strings.TrimRight(url.String(), "&")
+}
+
+func (c *GClient) GetSources(qp map[string][]string) (*entities.NewsSource, error) {
+	url := prepareUrl("https://newsapi.org/v2/sources", qp)
+	req, err := http.NewRequest("GET", url, nil); if err != nil {
 		return nil, err
 	} else {
 		req.Header.Add("X-Api-Key", "17d9a468d74748d3a39175d524747e95")
@@ -56,8 +72,9 @@ func (c *GClient) GetSources() (*entities.NewsSource, error) {
 	}
 }
 
-func (c *GClient) GetHeadlines() (*entities.TopHeadline, error) {
-	req, err := http.NewRequest("GET", "https://newsapi.org/v2/top-headlines?country=in&pageSize=5&page=0", nil); if err != nil {
+func (c *GClient) GetHeadlines(qp map[string][]string) (*entities.TopHeadline, error) {
+	url := prepareUrl("https://newsapi.org/v2/top-headlines", qp)
+	req, err := http.NewRequest("GET", url, nil); if err != nil {
 		return nil, err
 	} else {
 		req.Header.Add("X-Api-Key", "17d9a468d74748d3a39175d524747e95")
@@ -78,8 +95,9 @@ func (c *GClient) GetHeadlines() (*entities.TopHeadline, error) {
 	}
 }
 
-func (c *GClient) GetEverything() (*entities.Everything, error) {
-	req, err := http.NewRequest("GET", "https://newsapi.org/v2/everything?sources=associated-press,financial-post&q=trump", nil); if err != nil {
+func (c *GClient) GetEverything(qp map[string][]string) (*entities.Everything, error) {
+	url := prepareUrl("https://newsapi.org/v2/everything", qp)
+	req, err := http.NewRequest("GET", url, nil); if err != nil {
 		return nil, err
 	} else {
 		req.Header.Add("X-Api-Key", "17d9a468d74748d3a39175d524747e95")
