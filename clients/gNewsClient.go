@@ -50,7 +50,7 @@ func prepareUrl(base string, qp map[string][]string) string {
 }
 
 func (c *GClient) GetSources(qp map[string][]string) (*entities.NewsSource, error) {
-	url := prepareUrl("https://newsapi.org/v2/sources", qp)
+	url := prepareUrl("http://newsapi.org/v2/sources", qp)
 	req, err := http.NewRequest("GET", url, nil); if err != nil {
 		return nil, err
 	} else {
@@ -73,7 +73,7 @@ func (c *GClient) GetSources(qp map[string][]string) (*entities.NewsSource, erro
 }
 
 func (c *GClient) GetHeadlines(qp map[string][]string) (*entities.TopHeadline, error) {
-	url := prepareUrl("https://newsapi.org/v2/top-headlines", qp)
+	url := prepareUrl("http://newsapi.org/v2/top-headlines", qp)
 	req, err := http.NewRequest("GET", url, nil); if err != nil {
 		return nil, err
 	} else {
@@ -96,7 +96,7 @@ func (c *GClient) GetHeadlines(qp map[string][]string) (*entities.TopHeadline, e
 }
 
 func (c *GClient) GetEverything(qp map[string][]string) (*entities.Everything, error) {
-	url := prepareUrl("https://newsapi.org/v2/everything", qp)
+	url := prepareUrl("http://newsapi.org/v2/everything", qp)
 	req, err := http.NewRequest("GET", url, nil); if err != nil {
 		return nil, err
 	} else {

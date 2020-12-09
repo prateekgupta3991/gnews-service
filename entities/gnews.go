@@ -30,7 +30,7 @@ type ArticleSource struct {
 
 type Article struct {
 	Source ArticleSource `json:"source"`
-	Autho string `json:"author"`
+	Author string `json:"author"`
 	Title string `json:"title"`
 	Description string `json:"description"`
 	Url string `json:"url"`
