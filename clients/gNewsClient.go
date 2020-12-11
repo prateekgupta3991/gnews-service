@@ -51,7 +51,7 @@ func prepareUrl(base string, qp map[string][]string) string {
 
 func (c *GClient) GetSources(qp map[string][]string) (*entities.NewsSource, error) {
 	url := prepareUrl("http://newsapi.org/v2/sources", qp)
-	req, err := http.NewRequest("GET", url, nil); if err != nil {
+	if req, err := http.NewRequest("GET", url, nil); err != nil {
 		return nil, err
 	} else {
 		req.Header.Add("X-Api-Key", "17d9a468d74748d3a39175d524747e95")
@@ -60,10 +60,10 @@ func (c *GClient) GetSources(qp map[string][]string) (*entities.NewsSource, erro
 		}
 		defer resp.Body.Close()
 		ns := new(entities.NewsSource)
-		body, err := ioutil.ReadAll(resp.Body); if err != nil {
+		if body, err := ioutil.ReadAll(resp.Body); err != nil {
 			return nil, err
 		} else {
-			err := json.Unmarshal(body, &ns); if err != nil {
+			if err := json.Unmarshal(body, &ns); err != nil {
 				return nil, err
 			} else {
 				return ns, nil
@@ -74,7 +74,7 @@ func (c *GClient) GetSources(qp map[string][]string) (*entities.NewsSource, erro
 
 func (c *GClient) GetHeadlines(qp map[string][]string) (*entities.TopHeadline, error) {
 	url := prepareUrl("http://newsapi.org/v2/top-headlines", qp)
-	req, err := http.NewRequest("GET", url, nil); if err != nil {
+	if req, err := http.NewRequest("GET", url, nil); err != nil {
 		return nil, err
 	} else {
 		req.Header.Add("X-Api-Key", "17d9a468d74748d3a39175d524747e95")
@@ -83,7 +83,7 @@ func (c *GClient) GetHeadlines(qp map[string][]string) (*entities.TopHeadline, e
 		}
 		defer resp.Body.Close()
 		ns := new(entities.TopHeadline)
-		body, err := ioutil.ReadAll(resp.Body); if err != nil {
+		if body, err := ioutil.ReadAll(resp.Body); err != nil {
 			return nil, err
 		} else {
 			err := json.Unmarshal(body, &ns); if err != nil {
@@ -97,7 +97,7 @@ func (c *GClient) GetHeadlines(qp map[string][]string) (*entities.TopHeadline, e
 
 func (c *GClient) GetEverything(qp map[string][]string) (*entities.Everything, error) {
 	url := prepareUrl("http://newsapi.org/v2/everything", qp)
-	req, err := http.NewRequest("GET", url, nil); if err != nil {
+	if req, err := http.NewRequest("GET", url, nil); err != nil {
 		return nil, err
 	} else {
 		req.Header.Add("X-Api-Key", "17d9a468d74748d3a39175d524747e95")
@@ -106,7 +106,7 @@ func (c *GClient) GetEverything(qp map[string][]string) (*entities.Everything, e
 		}
 		defer resp.Body.Close()
 		ns := new(entities.Everything)
-		body, err := ioutil.ReadAll(resp.Body); if err != nil {
+		if body, err := ioutil.ReadAll(resp.Body); err != nil {
 			return nil, err
 		} else {
 			err := json.Unmarshal(body, &ns); if err != nil {

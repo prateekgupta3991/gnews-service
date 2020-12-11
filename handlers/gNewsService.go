@@ -1,8 +1,13 @@
 package handlers
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
+	"log"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/prateekgupta3991/refresher/clients"
@@ -12,14 +17,14 @@ import (
 )
 
 type GNewsService struct {
-	Client *clients.GClient
+	Client   *clients.GClient
 	DbClient *repository.DbSession
 }
 
 func GetNewGNews() *NewsService {
 	return &NewsService{
 		Service: &GNewsService{
-			Client: clients.InitGNewsClient(),
+			Client:   clients.InitGNewsClient(),
 			DbClient: repository.GetNewDbSession(),
 		},
 	}
@@ -27,57 +32,98 @@ func GetNewGNews() *NewsService {
 
 func (g *GNewsService) GetSources(c *gin.Context) {
 	qp := c.Request.URL.Query()
-	ok, err := validations.RequestQParams(qp, "source"); if !ok {
+	ok, err := validations.RequestQParams(qp, "source")
+	if !ok {
 		c.JSON(http.StatusBadRequest, gin.H{"Error: ": err.Error()})
 	}
-	s, err := g.Client.GetSources(qp); if err != nil {
+	if s, err := g.Client.GetSources(qp); err != nil {
 		fmt.Printf("Error encountered : %v", err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"Error: ": err})
 	} else {
+		var newsBySourceList []entities.NewsBySource
+		for _, val := range s.SourceList.Sources {
+			newsBySourceList = append(newsBySourceList, entities.NewsBySource{
+				SourceId:          val.Id,
+				SourceName:        val.Name,
+				SourceDescription: val.Description,
+				SourceUrl:         val.Url,
+				SourceCategory:    val.Category,
+				SourceLanguage:    val.Language,
+				SourceCountry:     val.Country,
+			})
+		}
+		for _, val := range newsBySourceList {
+			if err := g.DbClient.InsertSources(val); err != nil {
+				log.Println(err.Error())
+			}
+		}
 		c.JSON(http.StatusOK, s)
 	}
 }
 
 func (g *GNewsService) GetHeadlines(c *gin.Context) {
 	qp := c.Request.URL.Query()
-	ok, err := validations.RequestQParams(qp, "headlines"); if !ok {
+	ok, err := validations.RequestQParams(qp, "headlines")
+	if !ok {
 		c.JSON(http.StatusBadRequest, gin.H{"Error: ": err.Error()})
 	}
-	s, err := g.Client.GetHeadlines(qp); if err != nil {
+	if s, err := g.Client.GetHeadlines(qp); err != nil {
 		fmt.Printf("Error encountered : %v", err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"Error: ": err})
 	} else {
 		var newsBySourceList []entities.NewsBySource
 		for _, val := range s.ArticleList.Articles {
-			// if pTime, err := time.Parse("2006-01-02T15:04:05Z", val.PublishedAt);
+			tHash := md5.Sum([]byte(val.Description))
 			newsBySourceList = append(newsBySourceList, entities.NewsBySource{
-				SourceId: val.Source.Id,
-				TitleHash: "srg5egebr5156",
-				NewsAuthor: val.Author,
-				NewsContent: val.Content,
+				SourceId:        val.Source.Id,
+				TitleHash:       hex.EncodeToString(tHash[:]),
+				NewsAuthor:      val.Author,
+				NewsContent:     val.Content,
 				NewsDescription: val.Description,
-				SourceName: val.Source.Name,
+				NewsTitle:       val.Description,
+				NewsUrl:         val.Url,
+				NewsUrlToImage:  val.UrlToImage,
 				NewsPublishedAt: val.PublishedAt,
+				SourceName:      val.Source.Name,
 			})
 		}
-		g.DbClient.InsertTopNews(newsBySourceList[0])
-		c.JSON(http.StatusOK, s)
+		for _, val := range newsBySourceList {
+			if err := g.DbClient.InsertTopNews(val); err != nil {
+				log.Println(err.Error())
+			} else {
+				c.JSON(http.StatusOK, newsBySourceList)
+			}
+		}
+		// c.JSON(http.StatusOK, newsBySourceList)
 	}
 }
 
 func (g *GNewsService) GetNews(c *gin.Context) {
 	qp := c.Request.URL.Query()
-	ok, err := validations.RequestQParams(qp, "all"); if !ok {
+	ok, err := validations.RequestQParams(qp, "all")
+	if !ok {
 		c.JSON(http.StatusBadRequest, gin.H{"Error: ": err.Error()})
 	}
-	s, err := g.Client.GetEverything(qp); if err != nil {
+	if s, err := g.Client.GetEverything(qp); err != nil {
 		fmt.Printf("Error encountered : %v", err.Error())
+		fmt.Println(s)
 		c.JSON(http.StatusBadRequest, gin.H{"Error: ": err})
 	} else {
-		if dbResp, err := g.DbClient.GetTopNews("associated-press", 3); err == nil {
-			c.JSON(http.StatusOK, dbResp)
+		if lmt, err := strconv.Atoi(qp["top"][0]); err != nil {
+			lmt = 3
+		} else {
+			srcs := ""
+			for _, val := range qp["sources"] {
+				sVal := strings.Split(val, ",")
+				for _, v := range sVal {
+					srcs = srcs + "'" + v + "',"
+				}
+			}
+			srcs = strings.TrimRight(srcs, ",")
+			if dbResp, err := g.DbClient.GetTopNewsBySource(srcs, lmt); err == nil {
+				c.JSON(http.StatusOK, dbResp)
+			}
+			// c.JSON(http.StatusOK, s)
 		}
-		fmt.Println(s)
-		// c.JSON(http.StatusOK, s)
 	}
 }

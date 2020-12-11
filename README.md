@@ -29,8 +29,8 @@ Create keyspace "godemo"
 
 Create table
 > create table emp(eid uuid primarykey, name text);
-> create table news_by_source (sid varchar, title_hash text, created_at timeuuid, sname varchar, sdesc text, surl text, scategory varchar, slang varchar, scountry varchar, nauthor varchar, ntitle tex
-t, ndesc text, nurl text, nurl_to_image text, npublished_at varchar, ncontent text, primary key ((sid), created_at, title_hash)) with clustering order by (created_at desc);
+> create table news_by_source (sid varchar, title_hash text, created_at timeuuid, sname varchar, sdesc text, surl text, scategory varchar, slang varchar, scountry varchar, nauthor varchar, ntitle text, ndesc text, nurl text, nurl_to_image text, npublished_at varchar, ncontent text, primary key ((sid), created_at, title_hash)) with clustering order by (created_at desc);
+> CREATE TABLE godemo.news_sources (sid text, created_at timeuuid, scategory text, scountry text, sdesc text, slang text, sname text, surl text, PRIMARY KEY (scountry, sid));
 
 Insert data
 > insert into emp(id, name) values (uuid(), 'Prateek Gupta');
