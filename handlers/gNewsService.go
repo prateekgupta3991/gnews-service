@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/prateekgupta3991/refresher/clients"
@@ -52,11 +53,20 @@ func (g *GNewsService) GetSources(c *gin.Context) {
 				SourceCountry:     val.Country,
 			})
 		}
-		for _, val := range newsBySourceList {
-			if err := g.DbClient.InsertSources(val); err != nil {
+		ch := make(chan entities.NewsBySource)
+		go func (ch chan entities.NewsBySource) {
+			if err := g.DbClient.InsertSources(<-ch); err != nil {
 				log.Println(err.Error())
 			}
-		}
+		}(ch)
+		start := time.Now()
+		go func() {
+			for _, val := range newsBySourceList {
+				ch <- val
+			}
+		}()
+		elapsed := time.Since(start)
+		log.Printf("elapsed time : %s", elapsed)
 		c.JSON(http.StatusOK, s)
 	}
 }
