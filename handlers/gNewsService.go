@@ -54,9 +54,11 @@ func (g *GNewsService) GetSources(c *gin.Context) {
 			})
 		}
 		ch := make(chan entities.NewsBySource)
-		go func (ch chan entities.NewsBySource) {
-			if err := g.DbClient.InsertSources(<-ch); err != nil {
-				log.Println(err.Error())
+		go func(c chan entities.NewsBySource) {
+			for c1 := range c {
+				if err := g.DbClient.InsertSources(c1); err != nil {
+					log.Println(err.Error())
+				}
 			}
 		}(ch)
 		start := time.Now()
