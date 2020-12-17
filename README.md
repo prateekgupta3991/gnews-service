@@ -1,4 +1,6 @@
-Simple Login service in Go
+Simple News service in Go. Integrates with Google news api - https://newsapi.org/
+Uses cassandra as storage layer and Go for backend. Docker deployable.
+
 cassandra cluster
 Docker deploy
 
