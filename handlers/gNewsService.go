@@ -103,15 +103,42 @@ func (g *GNewsService) GetNews(c *gin.Context) {
 	ok, err := validations.RequestQParams(qp, "all")
 	if !ok {
 		c.JSON(http.StatusBadRequest, gin.H{"Error: ": err.Error()})
+		return
 	}
 	if s, err := g.Client.GetEverything(qp); err != nil {
 		fmt.Printf("Error encountered : %v", err.Error())
 		fmt.Println(s)
 		c.JSON(http.StatusBadRequest, gin.H{"Error: ": err})
+		return
 	} else {
 		if lmt, err := strconv.Atoi(qp["top"][0]); err != nil {
 			lmt = 3
 		} else {
+			//persist in db
+			var newsBySourceList []entities.NewsBySource
+			for _, val := range s.ArticleList.Articles {
+				tHash := md5.Sum([]byte(val.Description))
+				newsBySourceList = append(newsBySourceList, entities.NewsBySource{
+					SourceId:        val.Source.Id,
+					TitleHash:       hex.EncodeToString(tHash[:]),
+					NewsAuthor:      val.Author,
+					NewsContent:     val.Content,
+					NewsDescription: val.Description,
+					NewsTitle:       val.Description,
+					NewsUrl:         val.Url,
+					NewsUrlToImage:  val.UrlToImage,
+					NewsPublishedAt: val.PublishedAt,
+					SourceName:      val.Source.Name,
+				})
+			}
+			for _, val := range newsBySourceList {
+				if err := g.DbClient.InsertTopNews(val); err != nil {
+					log.Println(err.Error())
+					return
+				}
+			}
+
+			// fetch from db and return response
 			srcs := ""
 			for _, val := range qp["sources"] {
 				sVal := strings.Split(val, ",")
@@ -123,7 +150,6 @@ func (g *GNewsService) GetNews(c *gin.Context) {
 			if dbResp, err := g.DbClient.GetTopNewsBySource(srcs, lmt); err == nil {
 				c.JSON(http.StatusOK, dbResp)
 			}
-			// c.JSON(http.StatusOK, s)
 		}
 	}
 }
