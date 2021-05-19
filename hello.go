@@ -27,9 +27,12 @@ func main() {
 	CassandraSession := cassandra.Session
 	defer CassandraSession.Close()
 	router.GET("/login", handlers.Login)
+	router.GET("/subscribers/all", handlers.SubscribedUser)
 	gnews := handlers.GetNewGNews().Service.(*handlers.GNewsService)
 	router.GET("/sources", gnews.GetSources)
 	router.GET("/headlines", gnews.GetHeadlines)
 	router.GET("/news", gnews.GetNews)
+	tgm := handlers.NewTelegram().IMService.(*handlers.Communication)
+	router.POST("/tgm/updates", tgm.PushedUpdates)
 	log.Fatal(router.Run(":" + con.ServerPort))
 }
