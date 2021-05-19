@@ -1,14 +1,10 @@
 package clients
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
-
-	"github.com/prateekgupta3991/refresher/entities"
 )
 
 func InitTelegramClient() *TelegramClient {
@@ -48,26 +44,27 @@ func prepareBaseUrl(base string, qp map[string][]string) string {
 }
 
 func (c *TelegramClient) Send() error {
-	url := prepareUrl("http://newsapi.org/v2/everything", qp)
-	if req, err := http.NewRequest("GET", url, nil); err != nil {
-		return nil, err
-	} else {
-		req.Header.Add("X-Api-Key", "17d9a468d74748d3a39175d524747e95")
-		resp, err := c.HttpClient.Do(req)
-		if err != nil {
-			return nil, err
-		}
-		defer resp.Body.Close()
-		ns := new(entities.Everything)
-		if body, err := ioutil.ReadAll(resp.Body); err != nil {
-			return nil, err
-		} else {
-			err := json.Unmarshal(body, &ns)
-			if err != nil {
-				return nil, err
-			} else {
-				return ns, nil
-			}
-		}
-	}
+	// url := prepareUrl("http://newsapi.org/v2/everything", qp)
+	// if req, err := http.NewRequest("GET", url, nil); err != nil {
+	// 	return nil, err
+	// } else {
+	// 	req.Header.Add("X-Api-Key", "17d9a468d74748d3a39175d524747e95")
+	// 	resp, err := c.HttpClient.Do(req)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	defer resp.Body.Close()
+	// 	ns := new(entities.Everything)
+	// 	if body, err := ioutil.ReadAll(resp.Body); err != nil {
+	// 		return nil, err
+	// 	} else {
+	// 		err := json.Unmarshal(body, &ns)
+	// 		if err != nil {
+	// 			return nil, err
+	// 		} else {
+	// 			return ns, nil
+	// 		}
+	// 	}
+	// }
+	return nil
 }
