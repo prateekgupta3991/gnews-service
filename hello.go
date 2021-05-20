@@ -26,8 +26,10 @@ func main() {
 	cassandra.InitDb(con.Keyspace, hosts)
 	CassandraSession := cassandra.Session
 	defer CassandraSession.Close()
-	router.GET("/login", handlers.Login)
-	router.GET("/subscribers/all", handlers.SubscribedUser)
+
+	usr := handlers.NewUserBaseService().UserServ.(*handlers.UserBaseService)
+	router.POST("/subscribers", usr.Subscribe)
+	router.GET("/subscribers/all", usr.Subscribed)
 	gnews := handlers.GetNewGNews().Service.(*handlers.GNewsService)
 	router.GET("/sources", gnews.GetSources)
 	router.GET("/headlines", gnews.GetHeadlines)
