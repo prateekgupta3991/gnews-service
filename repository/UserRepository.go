@@ -11,6 +11,8 @@ import (
 type UserRepo interface {
 	GetUserByTgDetils(tgmId int, tgmUn string) (entities.UserDetails, error)
 	InsertUser(m entities.UserDetails) error
+	GetAllUser() ([]entities.UserDetails, error)
+	GetUserByTgUn(tgmUn string) (entities.UserDetails, error)
 }
 
 type UserDbSession struct {
@@ -68,4 +70,21 @@ func (c *UserDbSession) GetAllUser() ([]entities.UserDetails, error) {
 		}
 	}
 	return subscribers, nil
+}
+
+func (c *UserDbSession) GetUserByTgUn(tgmUn string) (entities.UserDetails, error) {
+	m := map[string]interface{}{}
+	query := fmt.Sprintf("SELECT uid, name, t_un, chat_id from user where t_un = %s ALLOW FILTERING", tgmUn)
+	iter := c.DbClient.Query(query).Consistency(gocql.One).Iter()
+	var subscriber entities.UserDetails
+	for iter.MapScan(m) {
+		subscriber = entities.UserDetails{
+			ID:         m["uid"].(int64),
+			Name:       fmt.Sprintf("%v", m["name"]),
+			TelegramId: fmt.Sprintf("%v", m["t_un"]),
+			ChatId:     m["chat_id"].(int32),
+		}
+		m = map[string]interface{}{}
+	}
+	return subscriber, nil
 }

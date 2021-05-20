@@ -1,10 +1,14 @@
 package clients
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/prateekgupta3991/refresher/entities"
 )
 
 func InitTelegramClient() *TelegramClient {
@@ -27,7 +31,7 @@ type TelegramClient struct {
 }
 
 type Send interface {
-	Send() error
+	Send() (*entities.Webhook, error)
 }
 
 func prepareBaseUrl(base string, qp map[string][]string) string {
@@ -43,28 +47,27 @@ func prepareBaseUrl(base string, qp map[string][]string) string {
 	return strings.TrimRight(url.String(), "&")
 }
 
-func (c *TelegramClient) Send() error {
-	// url := prepareUrl("http://newsapi.org/v2/everything", qp)
-	// if req, err := http.NewRequest("GET", url, nil); err != nil {
-	// 	return nil, err
-	// } else {
-	// 	req.Header.Add("X-Api-Key", "17d9a468d74748d3a39175d524747e95")
-	// 	resp, err := c.HttpClient.Do(req)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	defer resp.Body.Close()
-	// 	ns := new(entities.Everything)
-	// 	if body, err := ioutil.ReadAll(resp.Body); err != nil {
-	// 		return nil, err
-	// 	} else {
-	// 		err := json.Unmarshal(body, &ns)
-	// 		if err != nil {
-	// 			return nil, err
-	// 		} else {
-	// 			return ns, nil
-	// 		}
-	// 	}
-	// }
-	return nil
+func (c *TelegramClient) Send(qp map[string][]string) (*entities.Webhook, error) {
+	// take bot token from conf
+	url := prepareUrl("https://api.telegram.org/bot1853514787:AAHEi4brq8vXE39sYIqPTfFzfYNPvDDWmY0/sendMessage", qp)
+	if req, err := http.NewRequest("POST", url, nil); err != nil {
+		return nil, err
+	} else {
+		resp, err := c.HttpClient.Do(req)
+		if err != nil {
+			return nil, err
+		}
+		defer resp.Body.Close()
+		wh := new(entities.Webhook)
+		if body, err := ioutil.ReadAll(resp.Body); err != nil {
+			return nil, err
+		} else {
+			// fix the unmarshalling here
+			if err := json.Unmarshal(body, &wh); err != nil || !wh.Ok {
+				return nil, err
+			} else {
+				return wh, nil
+			}
+		}
+	}
 }

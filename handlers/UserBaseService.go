@@ -41,13 +41,14 @@ func (u *UserBaseService) Subscribe(c *gin.Context) {
 		usrDet := new(entities.UserDetails)
 		err := json.Unmarshal(body, &usrDet)
 		if err != nil {
-			fmt.Printf("Could not process the webhook. Error encountered : %v", err.Error())
+			fmt.Printf("Could not process the subscription request. Error encountered : %v", err.Error())
+			c.JSON(http.StatusBadRequest, gin.H{"Error: ": err.Error()})
 		} else {
 			if err := u.CheckAndPersist(usrDet); err != nil {
-				c.JSON(http.StatusOK, "Failure")
+				c.JSON(http.StatusOK, gin.H{"Error: ": err.Error()})
 				return
 			}
-			c.JSON(http.StatusOK, "OK")
+			c.JSON(http.StatusOK, gin.H{"Success": "true"})
 		}
 	}
 }
