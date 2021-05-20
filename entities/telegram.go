@@ -11,20 +11,19 @@ type Result struct {
 }
 
 type Message struct {
-	Id       int64       `json:"message_id"`
-	From     FromUser    `json:"from"`
-	Chat     ChatDetails `json:"chat"`
-	Date     string      `json:"date"`
-	Text     string      `json:"text"`
-	Entities []Ent       `json:"entities"`
+	Id   int64       `json:"message_id"`
+	From FromUser    `json:"from"`
+	Chat ChatDetails `json:"chat"`
+	// Date     string      `json:"date"`
+	Text string `json:"text"`
+	// Entities []Ent       `json:"entities"`
 }
 
 type TelegramUsers struct {
 	Id        int64  `json:"id"`
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
-	UserName  string `json:"user_name"`
-	LangCode  string `json:"languageCode"`
+	UserName  string `json:"username"`
 }
 
 type FromUser struct {
