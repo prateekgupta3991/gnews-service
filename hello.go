@@ -36,5 +36,6 @@ func main() {
 	router.GET("/news", gnews.GetNews)
 	tgm := handlers.NewTelegram().IMService.(*handlers.Telegram)
 	router.POST("/tgm/updates", tgm.PushedUpdates)
+	router.POST("/tgm/reply", tgm.Notify)
 	log.Fatal(router.Run(":" + con.ServerPort))
 }

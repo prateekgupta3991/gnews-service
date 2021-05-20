@@ -41,3 +41,9 @@ type Ent struct {
 	Length int16  `json:"length"`
 	Type   string `json:"type"`
 }
+
+type TelegramReplyMsg struct {
+	ChatId   int    `json:"chatId"`
+	UserName string `json:"username"`
+	Text     string `json:"text"`
+}
