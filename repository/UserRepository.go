@@ -55,13 +55,17 @@ func (c *UserDbSession) GetAllUser() ([]entities.UserDetails, error) {
 	iter := c.DbClient.Query(query).Consistency(gocql.One).Iter()
 	var subscribers []entities.UserDetails
 	for iter.MapScan(m) {
-		subscribers = append(subscribers, entities.UserDetails{
-			ID:         m["uid"].(int64),
-			Name:       fmt.Sprintf("%v", m["name"]),
-			TelegramId: fmt.Sprintf("%v", m["t_un"]),
-			ChatId:     m["chat_id"].(int32),
-		})
-		m = map[string]interface{}{}
+		if id, ok := m["uid"].(int); ok {
+			if cid, ok := m["chat_id"].(int); ok {
+				subscribers = append(subscribers, entities.UserDetails{
+					ID:         int64(id),
+					Name:       fmt.Sprintf("%v", m["name"]),
+					TelegramId: fmt.Sprintf("%v", m["t_un"]),
+					ChatId:     int32(cid),
+				})
+				m = map[string]interface{}{}
+			}
+		}
 	}
 	return subscribers, nil
 }

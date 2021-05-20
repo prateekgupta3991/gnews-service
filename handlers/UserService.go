@@ -7,4 +7,5 @@ type UserService struct {
 type UserOps interface {
 	Subscribe()
 	Subscribed()
+	CheckAndPersist()
 }

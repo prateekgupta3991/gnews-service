@@ -35,7 +35,6 @@ func (u *UserBaseService) Subscribed(c *gin.Context) {
 }
 
 func (u *UserBaseService) Subscribe(c *gin.Context) {
-	// fmt.Println("Stay tuned. This will be done someday")
 	if body, err := ioutil.ReadAll(c.Request.Body); err != nil {
 		fmt.Printf("Error encountered : %v", err.Error())
 	} else {
@@ -44,23 +43,31 @@ func (u *UserBaseService) Subscribe(c *gin.Context) {
 		if err != nil {
 			fmt.Printf("Could not process the webhook. Error encountered : %v", err.Error())
 		} else {
-			if webhookObj.Ok {
-				for _, val := range webhookObj.Res {
-					if subscriber, err := t.TelegramDbClient.GetUserByTgDetils(int(val.Msg.From.Id), val.Msg.From.UserName); err != nil {
-						fmt.Printf("New subscriber with Id : %s and Username : %s", val.Msg.From.Id, val.Msg.From.UserName)
-						m := entities.UserDetails{
-							ID:         int64(val.Msg.From.Id),
-							Name:       val.Msg.From.FirstName,
-							TelegramId: val.Msg.From.UserName,
-							ChatId:     int32(val.Msg.Chat.Id),
-						}
-						t.TelegramDbClient.InsertUser(m)
-					} else {
-						fmt.Printf("Subscriber with Id : %s and Username : %s", subscriber.ID, subscriber.TelegramId)
-					}
-					// send a reply to subscriber or m
-				}
+			if err := u.CheckAndPersist(usrDet); err != nil {
+				c.JSON(http.StatusOK, "Failure")
+				return
 			}
+			c.JSON(http.StatusOK, "OK")
 		}
 	}
+}
+
+func (u *UserBaseService) CheckAndPersist(usrDet *entities.UserDetails) error {
+	if subscriber, err := u.UserDbClient.GetUserByTgDetils(int(usrDet.ID), usrDet.TelegramId); err != nil || subscriber.ID == 0 {
+		fmt.Printf("New subscriber with Id : %d and Username : %s", usrDet.ID, usrDet.TelegramId)
+		m := entities.UserDetails{
+			ID:         usrDet.ID,
+			Name:       usrDet.Name,
+			TelegramId: usrDet.TelegramId,
+			ChatId:     usrDet.ChatId,
+		}
+		if err := u.UserDbClient.InsertUser(m); err != nil {
+			fmt.Printf("Failure while persisting subscriber with Id : %d and Username : %s - %s", subscriber.ID, subscriber.TelegramId, err.Error())
+			return err
+		}
+	} else {
+		fmt.Printf("Subscriber found with Id : %d and Username : %s", subscriber.ID, subscriber.TelegramId)
+		return err
+	}
+	return nil
 }
