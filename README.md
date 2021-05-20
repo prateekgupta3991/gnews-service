@@ -30,12 +30,12 @@ Create keyspace "godemo"
 > Use godemo
 
 Create table
-> create table emp (eid uuid primary key, name text);
+> create table user (uid int, name text, t_un text, chat_id int, primary key(uid, t_un));
 > create table news_by_source (sid varchar, title_hash text, created_at timeuuid, sname varchar, sdesc text, surl text, scategory varchar, slang varchar, scountry varchar, nauthor varchar, ntitle text, ndesc text, nurl text, nurl_to_image text, npublished_at varchar, ncontent text, primary key ((sid), title_hash));
 > CREATE TABLE news_sources (sid text, created_at timeuuid, scategory text, scountry text, sdesc text, slang text, sname text, surl text, PRIMARY KEY (scountry, sid));
 
 Insert data
-> insert into emp(eid, name) values (uuid(), 'Prateek Gupta');
+> insert into user(uid, name, t_un) values (1367340022, 'Prateek Gupta', 'Prtkgpt');
 
 For running in your system, update the ip in cas.go file to your system ip via ifconfig.
 
@@ -48,3 +48,12 @@ Debug the docker image
 docker run -it --rm --entrypoint sh <image name>
 
 works
+
+Telegram bot
+Poll for update
+https://api.telegram.org/bot1853514787:AAHEi4brq8vXE39sYIqPTfFzfYNPvDDWmY0/getUpdates
+Webhook
+Set - https://api.telegram.org/bot{bot_token}/setWebhook?url={your_server_url}
+Delete - https://api.telegram.org/bot{bot_token}/deleteWebhook
+Send msg to user
+https://api.telegram.org/bot{bot_token}/sendMessage?chat_id={chat_id}&text={text}

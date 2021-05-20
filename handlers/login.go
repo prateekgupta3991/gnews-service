@@ -25,3 +25,27 @@ func Login(c *gin.Context) {
 	u.Name = uname
 	c.JSON(http.StatusOK, u)
 }
+
+// subscribed user if new user func
+func SubscribedUser(c *gin.Context) {
+	var respList []entities.UserDetails
+	m := map[string]interface{}{}
+	results := cassandra.Session.Query("select * from user").Iter()
+	var uid int64
+	var uname string
+	var tId string
+	var cId int32
+	for results.MapScan(m) {
+		uid = m["id"].(int64)
+		uname = m["name"].(string)
+		tId = m["t_un"].(string)
+		cId = m["chat_id"].(int32)
+		var u entities.UserDetails
+		u.ID = uid
+		u.Name = uname
+		u.TelegramId = tId
+		u.ChatId = cId
+		respList = append(respList, u)
+	}
+	c.JSON(http.StatusOK, respList)
+}
