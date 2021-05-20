@@ -48,3 +48,20 @@ func (c *UserDbSession) InsertUser(m entities.UserDetails) error {
 	}
 	return nil
 }
+
+func (c *UserDbSession) GetAllUser() ([]entities.UserDetails, error) {
+	m := map[string]interface{}{}
+	query := "SELECT uid, name, t_un, chat_id from user"
+	iter := c.DbClient.Query(query).Consistency(gocql.One).Iter()
+	var subscribers []entities.UserDetails
+	for iter.MapScan(m) {
+		subscribers = append(subscribers, entities.UserDetails{
+			ID:         m["uid"].(int64),
+			Name:       fmt.Sprintf("%v", m["name"]),
+			TelegramId: fmt.Sprintf("%v", m["t_un"]),
+			ChatId:     m["chat_id"].(int32),
+		})
+		m = map[string]interface{}{}
+	}
+	return subscribers, nil
+}
