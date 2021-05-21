@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/prateekgupta3991/refresher/clients"
@@ -50,20 +51,18 @@ func (t *Telegram) PushedUpdates(c *gin.Context) {
 			} else {
 				fmt.Printf("Subscriber found with Id : %d and Username : %s", subscriber.ID, subscriber.TelegramId)
 			}
-			// fix this
-			// t.Notify(c)
+			t.CallTelegramSendApi(strconv.Itoa(int(webhookObj.Msg.Chat.Id)), "tell me")
+			c.JSON(http.StatusOK, "OK")
 		}
 	}
 }
 
 func (t *Telegram) Notify(c *gin.Context) {
-	var qp map[string][]string = make(map[string][]string)
 	if body, err := ioutil.ReadAll(c.Request.Body); err != nil {
 		fmt.Printf("Error encountered : %v", err.Error())
 		c.JSON(http.StatusOK, err.Error())
 		return
 	} else {
-		// fix the contract
 		reply := new(entities.TelegramReplyMsg)
 		err := json.Unmarshal(body, &reply)
 		if err != nil {
@@ -71,18 +70,48 @@ func (t *Telegram) Notify(c *gin.Context) {
 			c.JSON(http.StatusOK, err.Error())
 			return
 		} else {
-			// fix this please
-			// if usrDet, err := t.TelegramDbClient.GetUserByTgDetils(reply.ChatId, reply.UserName); err != nil || usrDet.ID == 0 {
-			// 	fmt.Printf("Could not find user by username. Error encountered : %v", err.Error())
-			// 	c.JSON(http.StatusOK, err.Error())
-			// 	return
-			// } else {
-			msgId := strconv.Itoa(int(reply.ChatId))
-			qp["chat_id"] = []string{msgId}
-			qp["text"] = []string{reply.Text}
-			t.TelegramClient.Send(qp)
-			// }
+			if reply.ChatId == 0 && strings.EqualFold(reply.UserName, "") {
+				// send to every subscriber
+				if usrDetails, err := t.TelegramDbClient.GetAllUser(); err != nil || len(usrDetails) == 0 {
+					fmt.Printf("Could not find user by username. Error encountered : %v", err.Error())
+					c.JSON(http.StatusOK, err.Error())
+					return
+				} else {
+					for _, usr := range usrDetails {
+						cid := strconv.Itoa(int(usr.ChatId))
+						t.CallTelegramSendApi(cid, reply.Text)
+					}
+				}
+			} else if reply.ChatId != 0 && !strings.EqualFold(reply.UserName, "") {
+				// dont fetch usd. directly use the chatId
+				cid := strconv.Itoa(int(reply.ChatId))
+				t.CallTelegramSendApi(cid, reply.Text)
+			} else if strings.EqualFold(reply.UserName, "") {
+				// dont fetch usd. directly use the chatId
+				cid := strconv.Itoa(int(reply.ChatId))
+				t.CallTelegramSendApi(cid, reply.Text)
+			} else {
+				// fetch usd by username
+				if usrDet, err := t.TelegramDbClient.GetUserByTgUn(reply.UserName); err != nil || usrDet.ID == 0 {
+					fmt.Printf("Could not find user by username. Error encountered : %v", err.Error())
+					c.JSON(http.StatusOK, err.Error())
+					return
+				} else {
+					cid := strconv.Itoa(int(usrDet.ChatId))
+					t.CallTelegramSendApi(cid, reply.Text)
+				}
+			}
 			c.JSON(http.StatusOK, "OK")
 		}
 	}
+}
+
+func (t *Telegram) CallTelegramSendApi(chatId, text string) error {
+	var qp map[string][]string = make(map[string][]string)
+	qp["chat_id"] = []string{chatId}
+	qp["text"] = []string{text}
+	if _, err := t.TelegramClient.Send(qp); err != nil {
+		return err
+	}
+	return nil
 }
