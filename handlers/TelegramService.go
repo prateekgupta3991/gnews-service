@@ -72,16 +72,16 @@ func (t *Telegram) Notify(c *gin.Context) {
 			return
 		} else {
 			// fix this please
-			// if usrDet, err := t.TelegramDbClient.GetUserByTgDetils(reply.ChatId, reply.UserName); err != nil || usrDet.ID == 0 {
-			// 	fmt.Printf("Could not find user by username. Error encountered : %v", err.Error())
-			// 	c.JSON(http.StatusOK, err.Error())
-			// 	return
-			// } else {
-			msgId := strconv.Itoa(int(reply.ChatId))
-			qp["chat_id"] = []string{msgId}
-			qp["text"] = []string{reply.Text}
-			t.TelegramClient.Send(qp)
-			// }
+			if usrDet, err := t.TelegramDbClient.GetUserByTgDetils(reply.ChatId, reply.UserName); err != nil || usrDet.ID == 0 {
+				fmt.Printf("Could not find user by username. Error encountered : %v", err.Error())
+				c.JSON(http.StatusOK, err.Error())
+				return
+			} else {
+				msgId := strconv.Itoa(int(usrDet.ChatId))
+				qp["chat_id"] = []string{msgId}
+				qp["text"] = []string{reply.Text}
+				t.TelegramClient.Send(qp)
+			}
 			c.JSON(http.StatusOK, "OK")
 		}
 	}
