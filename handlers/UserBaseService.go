@@ -31,6 +31,8 @@ func (u *UserBaseService) Subscribed(c *gin.Context) {
 	} else {
 		respList = results
 	}
+	rId, _ := c.Get("uuid")
+	fmt.Printf("The request with uuid %s is served succesfully \n", rId)
 	c.JSON(http.StatusOK, respList)
 }
 

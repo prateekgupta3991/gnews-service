@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/prateekgupta3991/refresher/cassandra"
 	"github.com/prateekgupta3991/refresher/configs"
 	"github.com/prateekgupta3991/refresher/handlers"
@@ -27,6 +28,7 @@ func main() {
 	CassandraSession := cassandra.Session
 	defer CassandraSession.Close()
 
+	router.Use(guidMiddleware())
 	usr := handlers.NewUserBaseService().UserServ.(*handlers.UserBaseService)
 	router.POST("/subscribers", usr.Subscribe)
 	router.GET("/subscribers/all", usr.Subscribed)
@@ -38,4 +40,12 @@ func main() {
 	router.POST("/tgm/updates", tgm.PushedUpdates)
 	router.POST("/tgm/reply", tgm.Notify)
 	log.Fatal(router.Run(":" + con.ServerPort))
+}
+
+func guidMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		uuid := uuid.New()
+		c.Set("uuid", uuid)
+		c.Next()
+	}
 }
