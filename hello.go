@@ -46,6 +46,7 @@ func guidMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		uuid := uuid.New()
 		c.Set("uuid", uuid)
+		fmt.Printf("The request with uuid %s is started \n", uuid)
 		c.Next()
 	}
 }

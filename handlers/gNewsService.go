@@ -96,6 +96,8 @@ func (g *GNewsService) GetHeadlines(c *gin.Context) {
 		}
 		// c.JSON(http.StatusOK, newsBySourceList)
 	}
+	rId, _ := c.Get("uuid")
+	fmt.Printf("The request with uuid %s is served \n", rId)
 }
 
 func (g *GNewsService) GetNews(c *gin.Context) {
@@ -152,4 +154,6 @@ func (g *GNewsService) GetNews(c *gin.Context) {
 			}
 		}
 	}
+	rId, _ := c.Get("uuid")
+	fmt.Printf("The request with uuid %s is served \n", rId)
 }

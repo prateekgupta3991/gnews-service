@@ -32,7 +32,7 @@ func (u *UserBaseService) Subscribed(c *gin.Context) {
 		respList = results
 	}
 	rId, _ := c.Get("uuid")
-	fmt.Printf("The request with uuid %s is served succesfully \n", rId)
+	fmt.Printf("The request with uuid %s is served \n", rId)
 	c.JSON(http.StatusOK, respList)
 }
 
@@ -45,6 +45,7 @@ func (u *UserBaseService) Subscribe(c *gin.Context) {
 		if err != nil {
 			fmt.Printf("Could not process the subscription request. Error encountered : %v", err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"Error: ": err.Error()})
+			return
 		} else {
 			if err := u.CheckAndPersist(usrDet); err != nil {
 				c.JSON(http.StatusOK, gin.H{"Error: ": err.Error()})
@@ -53,6 +54,8 @@ func (u *UserBaseService) Subscribe(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{"Success": "true"})
 		}
 	}
+	rId, _ := c.Get("uuid")
+	fmt.Printf("The request with uuid %s is served \n", rId)
 }
 
 func (u *UserBaseService) CheckAndPersist(usrDet *entities.UserDetails) error {

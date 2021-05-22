@@ -55,6 +55,8 @@ func (t *Telegram) PushedUpdates(c *gin.Context) {
 			c.JSON(http.StatusOK, "OK")
 		}
 	}
+	rId, _ := c.Get("uuid")
+	fmt.Printf("The request with uuid %s is served \n", rId)
 }
 
 func (t *Telegram) Notify(c *gin.Context) {
@@ -104,6 +106,8 @@ func (t *Telegram) Notify(c *gin.Context) {
 			c.JSON(http.StatusOK, "OK")
 		}
 	}
+	rId, _ := c.Get("uuid")
+	fmt.Printf("The request with uuid %s is served \n", rId)
 }
 
 func (t *Telegram) CallTelegramSendApi(chatId, text string) error {
