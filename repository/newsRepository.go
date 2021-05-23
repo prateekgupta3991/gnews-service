@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/gocql/gocql"
-	"github.com/prateekgupta3991/refresher/cassandra"
 	"github.com/prateekgupta3991/refresher/entities"
 )
 
@@ -18,9 +17,9 @@ type DbSession struct {
 	DbClient *gocql.Session
 }
 
-func GetNewDbSession() *DbSession {
+func NewDbSession(cassession *gocql.Session) *DbSession {
 	return &DbSession{
-		DbClient: cassandra.Session,
+		DbClient: cassession,
 	}
 }
 

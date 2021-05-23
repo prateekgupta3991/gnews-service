@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gocql/gocql"
 	"github.com/prateekgupta3991/refresher/clients"
 	"github.com/prateekgupta3991/refresher/entities"
 	"github.com/prateekgupta3991/refresher/repository"
@@ -19,11 +20,11 @@ type Telegram struct {
 	TelegramDbClient *repository.UserDbSession
 }
 
-func NewTelegram() *Communication {
+func NewTelegram(hClient *http.Client, cassession *gocql.Session) *Communication {
 	return &Communication{
 		IMService: &Telegram{
-			TelegramClient:   clients.InitTelegramClient(),
-			TelegramDbClient: repository.GetNewUserDbSession(),
+			TelegramClient:   clients.InitTelegramClient(hClient),
+			TelegramDbClient: repository.NewUserDbSession(cassession),
 		},
 	}
 }

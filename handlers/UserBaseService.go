@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gocql/gocql"
 	"github.com/prateekgupta3991/refresher/entities"
 	"github.com/prateekgupta3991/refresher/repository"
 )
@@ -15,10 +16,10 @@ type UserBaseService struct {
 	UserDbClient *repository.UserDbSession
 }
 
-func NewUserBaseService() *UserService {
+func NewUserBaseService(cassession *gocql.Session) *UserService {
 	return &UserService{
 		UserServ: &UserBaseService{
-			UserDbClient: repository.GetNewUserDbSession(),
+			UserDbClient: repository.NewUserDbSession(cassession),
 		},
 	}
 }

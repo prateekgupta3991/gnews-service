@@ -6,21 +6,13 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/prateekgupta3991/refresher/entities"
 )
 
-func InitTelegramClient() *TelegramClient {
-	tr := &http.Transport{
-		MaxIdleConns:       10,
-		IdleConnTimeout:    30 * time.Second,
-		DisableCompression: true,
-	}
+func InitTelegramClient(hClient *http.Client) *TelegramClient {
 	telegramClient := &TelegramClient{
-		HttpClient: &http.Client{
-			Transport: tr,
-		},
+		HttpClient: hClient,
 	}
 
 	return telegramClient

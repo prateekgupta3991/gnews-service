@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gocql/gocql"
 	"github.com/prateekgupta3991/refresher/clients"
 	"github.com/prateekgupta3991/refresher/entities"
 	"github.com/prateekgupta3991/refresher/repository"
@@ -21,11 +22,11 @@ type GNewsService struct {
 	DbClient *repository.DbSession
 }
 
-func GetNewGNews() *NewsService {
+func NewGNews(hClient *http.Client, cassession *gocql.Session) *NewsService {
 	return &NewsService{
 		Service: &GNewsService{
-			Client:   clients.InitGNewsClient(),
-			DbClient: repository.GetNewDbSession(),
+			Client:   clients.NewGNewsClient(hClient),
+			DbClient: repository.NewDbSession(cassession),
 		},
 	}
 }

@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -24,19 +26,21 @@ func main() {
 		log.Panic("Error during config initialisation : " + err.Error())
 	}
 	hosts := strings.Split(con.CasDb, ",")
-	cassandra.InitDb(con.Keyspace, hosts)
-	CassandraSession := cassandra.Session
+	CassandraSession := cassandra.NewDbSession(con.Keyspace, hosts)
 	defer CassandraSession.Close()
 
 	router.Use(guidMiddleware())
-	usr := handlers.NewUserBaseService().UserServ.(*handlers.UserBaseService)
+
+	hClient := GetHttpClient()
+
+	usr := handlers.NewUserBaseService(CassandraSession).UserServ.(*handlers.UserBaseService)
 	router.POST("/subscribers", usr.Subscribe)
 	router.GET("/subscribers/all", usr.Subscribed)
-	gnews := handlers.GetNewGNews().Service.(*handlers.GNewsService)
+	gnews := handlers.NewGNews(hClient, CassandraSession).Service.(*handlers.GNewsService)
 	router.GET("/sources", gnews.GetSources)
 	router.GET("/headlines", gnews.GetHeadlines)
 	router.GET("/news", gnews.GetNews)
-	tgm := handlers.NewTelegram().IMService.(*handlers.Telegram)
+	tgm := handlers.NewTelegram(hClient, CassandraSession).IMService.(*handlers.Telegram)
 	router.POST("/tgm/updates", tgm.PushedUpdates)
 	router.POST("/tgm/reply", tgm.Notify)
 	log.Fatal(router.Run(":" + con.ServerPort))
@@ -48,5 +52,16 @@ func guidMiddleware() gin.HandlerFunc {
 		c.Set("uuid", uuid)
 		fmt.Printf("The request with uuid %s is started \n", uuid)
 		c.Next()
+	}
+}
+
+func GetHttpClient() *http.Client {
+	tr := &http.Transport{
+		MaxIdleConns:       10,
+		IdleConnTimeout:    30 * time.Second,
+		DisableCompression: true,
+	}
+	return &http.Client{
+		Transport: tr,
 	}
 }

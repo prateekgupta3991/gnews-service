@@ -6,24 +6,16 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/prateekgupta3991/refresher/entities"
 )
 
-func InitGNewsClient() *GClient {
-	tr := &http.Transport{
-		MaxIdleConns:       10,
-		IdleConnTimeout:    30 * time.Second,
-		DisableCompression: true,
-	}
-	gClient := &GClient {
-		HttpClient: &http.Client{
-			Transport: tr,
-		},
+func NewGNewsClient(hClient *http.Client) *GClient {
+	gClient := &GClient{
+		HttpClient: hClient,
 	}
 
-    return gClient
+	return gClient
 }
 
 type GClient struct {
@@ -55,7 +47,8 @@ func (c *GClient) GetSources(qp map[string][]string) (*entities.NewsSource, erro
 		return nil, err
 	} else {
 		req.Header.Add("X-Api-Key", "17d9a468d74748d3a39175d524747e95")
-		resp, err := c.HttpClient.Do(req); if err != nil {
+		resp, err := c.HttpClient.Do(req)
+		if err != nil {
 			return nil, err
 		}
 		defer resp.Body.Close()
@@ -78,7 +71,8 @@ func (c *GClient) GetHeadlines(qp map[string][]string) (*entities.TopHeadline, e
 		return nil, err
 	} else {
 		req.Header.Add("X-Api-Key", "17d9a468d74748d3a39175d524747e95")
-		resp, err := c.HttpClient.Do(req); if err != nil {
+		resp, err := c.HttpClient.Do(req)
+		if err != nil {
 			return nil, err
 		}
 		defer resp.Body.Close()
@@ -86,7 +80,8 @@ func (c *GClient) GetHeadlines(qp map[string][]string) (*entities.TopHeadline, e
 		if body, err := ioutil.ReadAll(resp.Body); err != nil {
 			return nil, err
 		} else {
-			err := json.Unmarshal(body, &ns); if err != nil {
+			err := json.Unmarshal(body, &ns)
+			if err != nil {
 				return nil, err
 			} else {
 				return ns, nil
@@ -101,7 +96,8 @@ func (c *GClient) GetEverything(qp map[string][]string) (*entities.Everything, e
 		return nil, err
 	} else {
 		req.Header.Add("X-Api-Key", "17d9a468d74748d3a39175d524747e95")
-		resp, err := c.HttpClient.Do(req); if err != nil {
+		resp, err := c.HttpClient.Do(req)
+		if err != nil {
 			return nil, err
 		}
 		defer resp.Body.Close()
@@ -109,7 +105,8 @@ func (c *GClient) GetEverything(qp map[string][]string) (*entities.Everything, e
 		if body, err := ioutil.ReadAll(resp.Body); err != nil {
 			return nil, err
 		} else {
-			err := json.Unmarshal(body, &ns); if err != nil {
+			err := json.Unmarshal(body, &ns)
+			if err != nil {
 				return nil, err
 			} else {
 				return ns, nil
