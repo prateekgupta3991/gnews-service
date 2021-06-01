@@ -40,7 +40,7 @@ func main() {
 	router.GET("/sources", gnews.GetSources)
 	router.GET("/headlines", gnews.GetHeadlines)
 	router.GET("/news", gnews.GetNews)
-	tgm := handlers.NewTelegram(hClient, CassandraSession).IMService.(*handlers.Telegram)
+	tgm := handlers.NewTelegram(hClient, CassandraSession, gnews).IMService.(*handlers.Telegram)
 	router.POST("/tgm/updates", tgm.PushedUpdates)
 	router.POST("/tgm/reply", tgm.Notify)
 	log.Fatal(router.Run(":" + con.ServerPort))
@@ -52,6 +52,7 @@ func guidMiddleware() gin.HandlerFunc {
 		c.Set("uuid", uuid)
 		fmt.Printf("The request with uuid %s is started \n", uuid)
 		c.Next()
+		fmt.Printf("The request with uuid %s is served \n", uuid)
 	}
 }
 

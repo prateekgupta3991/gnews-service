@@ -18,13 +18,15 @@ import (
 type Telegram struct {
 	TelegramClient   *clients.TelegramClient
 	TelegramDbClient *repository.UserDbSession
+	GNewsService     *GNewsService
 }
 
-func NewTelegram(hClient *http.Client, cassession *gocql.Session) *Communication {
+func NewTelegram(hClient *http.Client, cassession *gocql.Session, newsServ *GNewsService) *Communication {
 	return &Communication{
 		IMService: &Telegram{
 			TelegramClient:   clients.InitTelegramClient(hClient),
 			TelegramDbClient: repository.NewUserDbSession(cassession),
+			GNewsService:     newsServ,
 		},
 	}
 }
@@ -32,14 +34,15 @@ func NewTelegram(hClient *http.Client, cassession *gocql.Session) *Communication
 func (t *Telegram) PushedUpdates(c *gin.Context) {
 	if body, err := ioutil.ReadAll(c.Request.Body); err != nil {
 		fmt.Printf("Error encountered : %v", err.Error())
+		c.JSON(http.StatusBadRequest, "Bad request")
 	} else {
 		webhookObj := new(entities.Result)
 		err := json.Unmarshal(body, &webhookObj)
 		if err != nil {
-			fmt.Printf("Could not process the webhook. Error encountered : %v", err.Error())
+			fmt.Printf("Could not process the webhook. Error encountered : %v\n", err.Error())
 		} else {
 			if subscriber, err := t.TelegramDbClient.GetUserByTgDetils(int(webhookObj.Msg.From.Id), webhookObj.Msg.From.UserName); err != nil || subscriber.ID == 0 {
-				fmt.Printf("New subscriber with Id : %d and Username : %s", webhookObj.Msg.From.Id, webhookObj.Msg.From.UserName)
+				fmt.Printf("New subscriber with Id : %d and Username : %s\n", webhookObj.Msg.From.Id, webhookObj.Msg.From.UserName)
 				m := entities.UserDetails{
 					ID:         int64(webhookObj.Msg.From.Id),
 					Name:       webhookObj.Msg.From.FirstName,
@@ -47,17 +50,31 @@ func (t *Telegram) PushedUpdates(c *gin.Context) {
 					ChatId:     int32(webhookObj.Msg.Chat.Id),
 				}
 				if err := t.TelegramDbClient.InsertUser(m); err != nil {
-					fmt.Printf("Failure while persisting subscriber with Id : %d and Username : %s - %s", subscriber.ID, subscriber.TelegramId, err.Error())
+					fmt.Printf("Failure while persisting subscriber with Id : %d and Username : %s - %s\n", subscriber.ID, subscriber.TelegramId, err.Error())
 				}
 			} else {
-				fmt.Printf("Subscriber found with Id : %d and Username : %s", subscriber.ID, subscriber.TelegramId)
+				fmt.Printf("Subscriber found with Id : %d and Username : %s\n", subscriber.ID, subscriber.TelegramId)
 			}
-			t.CallTelegramSendApi(strconv.Itoa(int(webhookObj.Msg.Chat.Id)), "tell me")
+			cid := strconv.Itoa(int(webhookObj.Msg.Chat.Id))
+			t.CallTelegramSendApi(cid, "Your news feed is updated")
+
+			qp := make(map[string][]string)
+			qp["language"] = []string{"en"}
+			qp["country"] = []string{"in"}
+			if sources, ok := t.GNewsService.GetNewsSources(qp); !ok {
+				rId, _ := c.Get("uuid")
+				fmt.Printf("Unable to converse about source preference during requestId : %s", rId)
+			} else {
+				var srcListStr string
+				for _, val := range sources.SourceList.Sources {
+					srcListStr = fmt.Sprintf("%s - %s", val.Name, val.Url)
+					fmt.Printf("String representation of the sources value : %s \n", srcListStr)
+					t.CallTelegramSendApi(cid, srcListStr)
+				}
+			}
 			c.JSON(http.StatusOK, "OK")
 		}
 	}
-	rId, _ := c.Get("uuid")
-	fmt.Printf("The request with uuid %s is served \n", rId)
 }
 
 func (t *Telegram) Notify(c *gin.Context) {
@@ -80,9 +97,31 @@ func (t *Telegram) Notify(c *gin.Context) {
 					c.JSON(http.StatusOK, err.Error())
 					return
 				} else {
+					msgTxt := make([]string, 6)
+					msgTxt[0] = reply.Text
+					if strings.EqualFold(reply.Text, "") {
+						qp := make(map[string][]string)
+						// qp["top"] = []string{"5"}
+						qp["sources"] = []string{"google-news-in"}
+						if news, err := t.GNewsService.GetTopNewsBySourceFromDb(qp, 5); err != nil {
+							fmt.Printf("Error while content creation. Error encountered : %v", err.Error())
+							return
+						} else {
+							i := 1
+							msgTxt[0] = "Tada...Here is the top 5 news for you"
+							for _, val := range news {
+								msgTxt[i] = val.NewsDescription + " - " + val.NewsUrl
+								i++
+							}
+						}
+					}
 					for _, usr := range usrDetails {
-						cid := strconv.Itoa(int(usr.ChatId))
-						t.CallTelegramSendApi(cid, reply.Text)
+						if usr.ID == 1367340022 || usr.ID == 1815027583 {
+							cid := strconv.Itoa(int(usr.ChatId))
+							for _, txt := range msgTxt {
+								t.CallTelegramSendApi(cid, txt)
+							}
+						}
 					}
 				}
 			} else if reply.ChatId != 0 && !strings.EqualFold(reply.UserName, "") {
@@ -107,8 +146,6 @@ func (t *Telegram) Notify(c *gin.Context) {
 			c.JSON(http.StatusOK, "OK")
 		}
 	}
-	rId, _ := c.Get("uuid")
-	fmt.Printf("The request with uuid %s is served \n", rId)
 }
 
 func (t *Telegram) CallTelegramSendApi(chatId, text string) error {

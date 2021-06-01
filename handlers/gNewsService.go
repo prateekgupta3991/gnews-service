@@ -37,28 +37,11 @@ func (g *GNewsService) GetSources(c *gin.Context) {
 	if !ok {
 		c.JSON(http.StatusBadRequest, gin.H{"Error: ": err.Error()})
 	}
-	if s, err := g.Client.GetSources(qp); err != nil {
+	if sources, ok := g.GetNewsSources(qp); !ok {
 		fmt.Printf("Error encountered : %v", err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"Error: ": err})
 	} else {
-		var newsBySourceList []entities.NewsBySource
-		for _, val := range s.SourceList.Sources {
-			newsBySourceList = append(newsBySourceList, entities.NewsBySource{
-				SourceId:          val.Id,
-				SourceName:        val.Name,
-				SourceDescription: val.Description,
-				SourceUrl:         val.Url,
-				SourceCategory:    val.Category,
-				SourceLanguage:    val.Language,
-				SourceCountry:     val.Country,
-			})
-		}
-		for _, val := range newsBySourceList {
-			if err := g.DbClient.InsertSources(val); err != nil {
-				log.Println(err.Error())
-			}
-		}
-		c.JSON(http.StatusOK, s)
+		c.JSON(http.StatusOK, sources)
 	}
 }
 
@@ -97,8 +80,6 @@ func (g *GNewsService) GetHeadlines(c *gin.Context) {
 		}
 		// c.JSON(http.StatusOK, newsBySourceList)
 	}
-	rId, _ := c.Get("uuid")
-	fmt.Printf("The request with uuid %s is served \n", rId)
 }
 
 func (g *GNewsService) GetNews(c *gin.Context) {
@@ -142,19 +123,52 @@ func (g *GNewsService) GetNews(c *gin.Context) {
 			}
 
 			// fetch from db and return response
-			srcs := ""
-			for _, val := range qp["sources"] {
-				sVal := strings.Split(val, ",")
-				for _, v := range sVal {
-					srcs = srcs + "'" + v + "',"
-				}
-			}
-			srcs = strings.TrimRight(srcs, ",")
-			if dbResp, err := g.DbClient.GetTopNewsBySource(srcs, lmt); err == nil {
-				c.JSON(http.StatusOK, dbResp)
+			if resp, err := g.GetTopNewsBySourceFromDb(qp, lmt); err == nil {
+				c.JSON(http.StatusOK, resp)
 			}
 		}
 	}
-	rId, _ := c.Get("uuid")
-	fmt.Printf("The request with uuid %s is served \n", rId)
+}
+
+func (g *GNewsService) GetNewsSources(qp map[string][]string) (*entities.NewsSource, bool) {
+	if s, err := g.Client.GetSources(qp); err != nil {
+		fmt.Printf("Error encountered : %v", err.Error())
+		return nil, false
+	} else {
+		var newsBySourceList []entities.NewsBySource
+		for _, val := range s.SourceList.Sources {
+			newsBySourceList = append(newsBySourceList, entities.NewsBySource{
+				SourceId:          val.Id,
+				SourceName:        val.Name,
+				SourceDescription: val.Description,
+				SourceUrl:         val.Url,
+				SourceCategory:    val.Category,
+				SourceLanguage:    val.Language,
+				SourceCountry:     val.Country,
+			})
+		}
+		for _, val := range newsBySourceList {
+			if err := g.DbClient.InsertSources(val); err != nil {
+				log.Println(err.Error())
+				return nil, false
+			}
+		}
+		return s, true
+	}
+}
+
+func (g *GNewsService) GetTopNewsBySourceFromDb(qp map[string][]string, lim int) ([]entities.NewsBySource, error) {
+	srcs := ""
+	for _, val := range qp["sources"] {
+		sVal := strings.Split(val, ",")
+		for _, v := range sVal {
+			srcs = srcs + "'" + v + "',"
+		}
+	}
+	srcs = strings.TrimRight(srcs, ",")
+	if dbResp, err := g.DbClient.GetTopNewsBySource(srcs, lim); err == nil {
+		return dbResp, nil
+	} else {
+		return nil, err
+	}
 }

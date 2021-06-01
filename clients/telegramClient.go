@@ -43,6 +43,7 @@ func (c *TelegramClient) Send(qp map[string][]string) (*entities.Webhook, error)
 	// take bot token from conf
 	url := prepareUrl("https://api.telegram.org/bot1853514787:AAHEi4brq8vXE39sYIqPTfFzfYNPvDDWmY0/sendMessage", qp)
 	if req, err := http.NewRequest("POST", url, nil); err != nil {
+		fmt.Println(url)
 		return nil, err
 	} else {
 		resp, err := c.HttpClient.Do(req)
