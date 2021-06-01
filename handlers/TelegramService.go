@@ -116,12 +116,12 @@ func (t *Telegram) Notify(c *gin.Context) {
 						}
 					}
 					for _, usr := range usrDetails {
-						if usr.ID == 1367340022 || usr.ID == 1815027583 {
-							cid := strconv.Itoa(int(usr.ChatId))
-							for _, txt := range msgTxt {
-								t.CallTelegramSendApi(cid, txt)
-							}
+						// if usr.ID == 1367340022 || usr.ID == 1815027583 {
+						cid := strconv.Itoa(int(usr.ChatId))
+						for _, txt := range msgTxt {
+							t.CallTelegramSendApi(cid, txt)
 						}
+						// }
 					}
 				}
 			} else if reply.ChatId != 0 && !strings.EqualFold(reply.UserName, "") {
