@@ -1,6 +1,6 @@
 {
     "ServerPort": "8080",
-    "CasDb": "172.18.9.140:4092,172.18.9.140:4093",
+    "CasDb": "172.17.0.2:9042",
     "Keyspace":"godemo",
     "Apikey":"17d9a468d74748d3a39175d524747e95",
     "TbotApikey":"1853514787:AAHEi4brq8vXE39sYIqPTfFzfYNPvDDWmY0"
