@@ -1,7 +1,40 @@
 version: '3'
 
 services:
-  app:
+  appplication:
     build: .
     ports:
       - "8080:8080"
+    depends_on:
+      - casdb
+      - casdb-load-keyspace
+    environment:
+      - DATABASE_HOST=casdb
+    networks:
+      - backend
+  casdb:
+    image: cassandra:3.11
+    ports:
+      - "9042:9042"
+    healthcheck:
+      test: ["CMD", "cqlsh","-e describe keyspaces"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+    networks:
+      - backend
+
+  casdb-load-keyspace:
+      container_name: cassandra-load-keyspace
+      image: cassandra:3.11
+      depends_on:
+        casdb:
+          condition: service_healthy
+      volumes:
+        - ./seeds/seed-data.cql:/schema.cql
+      command: /bin/bash -c "echo loading cassandra keyspace && cqlsh casdb -f /schema.cql && exit"
+      networks:
+      - backend
+networks:
+  backend:
+    driver: "bridge"
