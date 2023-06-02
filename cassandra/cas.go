@@ -15,9 +15,7 @@ func NewDbSession(ks string, db []string) *gocql.Session {
 		fmt.Println("DATABASE_HOST env variable not set")
 		panic("error")
 	}
-	// time.Sleep(60 * time.Second)
-	cluster := gocql.NewCluster(dbHost) //"127.0.0.1:9042")
-	// time.Sleep(60 * time.Second)
+	cluster := gocql.NewCluster(dbHost)
 	cluster.Keyspace = ks
 	if Session, err = cluster.CreateSession(); err != nil {
 		fmt.Println(err)
