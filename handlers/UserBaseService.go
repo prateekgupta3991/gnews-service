@@ -56,7 +56,7 @@ func (u *UserBaseService) Subscribe(c *gin.Context) {
 }
 
 func (u *UserBaseService) CheckAndPersist(usrDet *entities.UserDetails) error {
-	if subscriber, err := u.UserDbClient.GetUserByTgDetils(int(usrDet.ID), usrDet.TelegramId); err != nil || subscriber.ID == 0 {
+	if subscriber, err := u.UserDbClient.GetUserByTgDetils(usrDet.ID, usrDet.TelegramId); err != nil || subscriber.ID == 0 {
 		fmt.Printf("New subscriber with Id : %d and Username : %s", usrDet.ID, usrDet.TelegramId)
 		m := entities.UserDetails{
 			ID:         usrDet.ID,

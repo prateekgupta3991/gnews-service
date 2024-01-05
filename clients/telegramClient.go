@@ -40,8 +40,8 @@ func prepareBaseUrl(base string, qp map[string][]string) string {
 }
 
 func (c *TelegramClient) Send(qp map[string][]string) (*entities.Webhook, error) {
-	// take bot token from conf
-	url := prepareUrl("https://api.telegram.org/bot1853514787:AAHEi4brq8vXE39sYIqPTfFzfYNPvDDWmY0/sendMessage", qp)
+	// TODO take bot token from conf
+	url := prepareUrl("https://api.telegram.org/bot6945346087:AAFamOovT__-Sw20my4y5qrMLm5iUiABJAk/sendMessage", qp)
 	if req, err := http.NewRequest("POST", url, nil); err != nil {
 		fmt.Println(url)
 		return nil, err
@@ -53,12 +53,15 @@ func (c *TelegramClient) Send(qp map[string][]string) (*entities.Webhook, error)
 		defer resp.Body.Close()
 		wh := new(entities.Webhook)
 		if body, err := ioutil.ReadAll(resp.Body); err != nil {
+		    fmt.Printf("Error while sending news for chatId - %s  error - %v\n", qp["chat_id"], err.Error())
 			return nil, err
 		} else {
 			// fix the unmarshalling here
 			if err := json.Unmarshal(body, &wh); err != nil || !wh.Ok {
+			    fmt.Printf("Marshalling Error while sending news for chatId - %s  error - %v\n", qp["chat_id"], err.Error())
 				return nil, err
 			} else {
+    			fmt.Printf("Successfully sent news for chatId - %s\n", qp["chat_id"])
 				return wh, nil
 			}
 		}

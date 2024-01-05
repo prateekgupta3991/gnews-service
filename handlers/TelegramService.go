@@ -41,13 +41,13 @@ func (t *Telegram) PushedUpdates(c *gin.Context) {
 		if err != nil {
 			fmt.Printf("Could not process the webhook. Error encountered : %v\n", err.Error())
 		} else {
-			if subscriber, err := t.TelegramDbClient.GetUserByTgDetils(int(webhookObj.Msg.From.Id), webhookObj.Msg.From.UserName); err != nil || subscriber.ID == 0 {
-				fmt.Printf("New subscriber with Id : %d and Username : %s\n", webhookObj.Msg.From.Id, webhookObj.Msg.From.UserName)
+			if subscriber, err := t.TelegramDbClient.GetUserByTgDetils(int64(webhookObj.Msg.From.Id), webhookObj.Msg.From.UserName); err != nil || subscriber.ID == 0 {
+				fmt.Printf("New subscriber with Id : %d and Username : %s and ChatId : %d\n", webhookObj.Msg.From.Id, webhookObj.Msg.From.UserName, webhookObj.Msg.Chat.Id)
 				m := entities.UserDetails{
 					ID:         int64(webhookObj.Msg.From.Id),
 					Name:       webhookObj.Msg.From.FirstName,
 					TelegramId: webhookObj.Msg.From.UserName,
-					ChatId:     int32(webhookObj.Msg.Chat.Id),
+					ChatId:     int64(webhookObj.Msg.Chat.Id),
 				}
 				if err := t.TelegramDbClient.InsertUser(m); err != nil {
 					fmt.Printf("Failure while persisting subscriber with Id : %d and Username : %s - %s\n", subscriber.ID, subscriber.TelegramId, err.Error())
@@ -152,6 +152,7 @@ func (t *Telegram) CallTelegramSendApi(chatId, text string) error {
 	var qp map[string][]string = make(map[string][]string)
 	qp["chat_id"] = []string{chatId}
 	qp["text"] = []string{text}
+	fmt.Printf("Sending news for chatId - %s\n", chatId)
 	if _, err := t.TelegramClient.Send(qp); err != nil {
 		return err
 	}

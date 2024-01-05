@@ -8,7 +8,7 @@ import (
 )
 
 type UserRepo interface {
-	GetUserByTgDetils(tgmId int, tgmUn string) (entities.UserDetails, error)
+	GetUserByTgDetils(tgmId int64, tgmUn string) (entities.UserDetails, error)
 	InsertUser(m entities.UserDetails) error
 	GetAllUser() ([]entities.UserDetails, error)
 	GetUserByTgUn(tgmUn string) (entities.UserDetails, error)
@@ -24,7 +24,7 @@ func NewUserDbSession(cassession *gocql.Session) *UserDbSession {
 	}
 }
 
-func (c *UserDbSession) GetUserByTgDetils(tgmId int, tgmUn string) (entities.UserDetails, error) {
+func (c *UserDbSession) GetUserByTgDetils(tgmId int64, tgmUn string) (entities.UserDetails, error) {
 	m := map[string]interface{}{}
 	query := fmt.Sprintf("SELECT uid, name, t_un, chat_id from user where uid = %d and t_un = '%s'", tgmId, tgmUn)
 	fmt.Println(query)
@@ -37,7 +37,7 @@ func (c *UserDbSession) GetUserByTgDetils(tgmId int, tgmUn string) (entities.Use
 					ID:         int64(id),
 					Name:       fmt.Sprintf("%v", m["name"]),
 					TelegramId: fmt.Sprintf("%v", m["t_un"]),
-					ChatId:     int32(cid),
+					ChatId:     int64(cid),
 				}
 			}
 		}
@@ -48,7 +48,7 @@ func (c *UserDbSession) GetUserByTgDetils(tgmId int, tgmUn string) (entities.Use
 
 func (c *UserDbSession) InsertUser(m entities.UserDetails) error {
 	query := "insert into user(uid, name, t_un, chat_id) values (?,?,?,?)"
-	if err := c.DbClient.Query(query, m.ID, m.Name, m.TelegramId, m.ChatId).Consistency(gocql.One).Exec(); err != nil {
+	if err := c.DbClient.Query(query, int64(m.ID), m.Name, m.TelegramId, m.ChatId).Consistency(gocql.One).Exec(); err != nil {
 		fmt.Errorf("Error encountered : %s", err.Error())
 		return err
 	}
@@ -67,7 +67,7 @@ func (c *UserDbSession) GetAllUser() ([]entities.UserDetails, error) {
 					ID:         int64(id),
 					Name:       fmt.Sprintf("%v", m["name"]),
 					TelegramId: fmt.Sprintf("%v", m["t_un"]),
-					ChatId:     int32(cid),
+					ChatId:     int64(cid),
 				})
 				m = map[string]interface{}{}
 			}
@@ -89,7 +89,7 @@ func (c *UserDbSession) GetUserByTgUn(tgmUn string) (entities.UserDetails, error
 					ID:         int64(id),
 					Name:       fmt.Sprintf("%v", m["name"]),
 					TelegramId: fmt.Sprintf("%v", m["t_un"]),
-					ChatId:     int32(cid),
+					ChatId:     int64(cid),
 				}
 			}
 		}

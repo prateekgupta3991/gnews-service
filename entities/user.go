@@ -11,5 +11,5 @@ type UserDetails struct {
 	ID         int64  `json:"id"`
 	Name       string `json:"username"`
 	TelegramId string `json:"telegramId"`
-	ChatId     int32  `json:"chatId"`
+	ChatId     int64  `json:"chatId"`
 }
