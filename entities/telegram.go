@@ -47,3 +47,13 @@ type TelegramReplyMsg struct {
 	UserName string `json:"username"`
 	Text     string `json:"text"`
 }
+
+type ReplyResponse struct {
+	Ok  bool                `json:"ok"`
+	Res ReplyResultDetails `json:"result"`
+}
+
+type ReplyResultDetails struct {
+	MessageId int64   `json:"message_id"`
+	Msg       Message `json:"message"`
+}

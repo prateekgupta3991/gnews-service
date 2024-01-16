@@ -25,6 +25,9 @@ RUN groupadd $APP_USER && useradd -m -g $APP_USER -l $APP_USER
 RUN mkdir -p $APP_HOME
 WORKDIR $APP_HOME
 
+# Add the following command to download CA certificates
+RUN apt-get update && apt-get install -y ca-certificates
+
 COPY --chown=0:0 --from=builder $APP_HOME/refresher $APP_HOME
 COPY --chown=0:0 --from=builder $APP_HOME/configs $APP_HOME/configs
 

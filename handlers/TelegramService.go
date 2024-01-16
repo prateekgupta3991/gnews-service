@@ -152,8 +152,9 @@ func (t *Telegram) CallTelegramSendApi(chatId, text string) error {
 	var qp map[string][]string = make(map[string][]string)
 	qp["chat_id"] = []string{chatId}
 	qp["text"] = []string{text}
-	fmt.Printf("Sending news for chatId - %s\n", chatId)
+	fmt.Printf("Sending news for chatId - %s\n %s\n", chatId, text)
 	if _, err := t.TelegramClient.Send(qp); err != nil {
+	    fmt.Printf("Error while sending msg %s\n", err)
 		return err
 	}
 	return nil

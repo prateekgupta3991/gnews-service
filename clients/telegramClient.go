@@ -39,7 +39,7 @@ func prepareBaseUrl(base string, qp map[string][]string) string {
 	return strings.TrimRight(url.String(), "&")
 }
 
-func (c *TelegramClient) Send(qp map[string][]string) (*entities.Webhook, error) {
+func (c *TelegramClient) Send(qp map[string][]string) (*entities.ReplyResponse, error) {
 	// TODO take bot token from conf
 	url := prepareUrl("https://api.telegram.org/bot6945346087:AAFamOovT__-Sw20my4y5qrMLm5iUiABJAk/sendMessage", qp)
 	if req, err := http.NewRequest("POST", url, nil); err != nil {
@@ -51,7 +51,7 @@ func (c *TelegramClient) Send(qp map[string][]string) (*entities.Webhook, error)
 			return nil, err
 		}
 		defer resp.Body.Close()
-		wh := new(entities.Webhook)
+		wh := new(entities.ReplyResponse)
 		if body, err := ioutil.ReadAll(resp.Body); err != nil {
 		    fmt.Printf("Error while sending news for chatId - %s  error - %v\n", qp["chat_id"], err.Error())
 			return nil, err
