@@ -31,6 +31,7 @@ func (u *UserBaseService) Subscribed(c *gin.Context) {
 		fmt.Errorf("Error while fetching subscribers. Returning empty response")
 	} else {
 		respList = results
+		fmt.Printf("user count : %d\n", len(respList))
 	}
 	c.JSON(http.StatusOK, respList)
 }

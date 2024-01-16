@@ -31,8 +31,8 @@ func (c *UserDbSession) GetUserByTgDetils(tgmId int64, tgmUn string) (entities.U
 	iter := c.DbClient.Query(query).Consistency(gocql.One).Iter()
 	var subscriber entities.UserDetails
 	for iter.MapScan(m) {
-		if id, ok := m["uid"].(int); ok {
-			if cid, ok := m["chat_id"].(int); ok {
+		if id, ok := m["uid"].(int64); ok {
+			if cid, ok := m["chat_id"].(int64); ok {
 				subscriber = entities.UserDetails{
 					ID:         int64(id),
 					Name:       fmt.Sprintf("%v", m["name"]),
@@ -59,10 +59,13 @@ func (c *UserDbSession) GetAllUser() ([]entities.UserDetails, error) {
 	m := map[string]interface{}{}
 	query := "SELECT uid, name, t_un, chat_id from user"
 	iter := c.DbClient.Query(query).Consistency(gocql.One).Iter()
+	fmt.Println("Query is done")
+	defer iter.Close()
 	var subscribers []entities.UserDetails
 	for iter.MapScan(m) {
-		if id, ok := m["uid"].(int); ok {
-			if cid, ok := m["chat_id"].(int); ok {
+	    fmt.Println(m)
+		if id, ok := m["uid"].(int64); ok {
+			if cid, ok := m["chat_id"].(int64); ok {
 				subscribers = append(subscribers, entities.UserDetails{
 					ID:         int64(id),
 					Name:       fmt.Sprintf("%v", m["name"]),
@@ -70,6 +73,8 @@ func (c *UserDbSession) GetAllUser() ([]entities.UserDetails, error) {
 					ChatId:     int64(cid),
 				})
 				m = map[string]interface{}{}
+			} else {
+			    fmt.Println("invalid chat id")
 			}
 		}
 	}
@@ -83,8 +88,8 @@ func (c *UserDbSession) GetUserByTgUn(tgmUn string) (entities.UserDetails, error
 	iter := c.DbClient.Query(query).Consistency(gocql.One).Iter()
 	var subscriber entities.UserDetails
 	for iter.MapScan(m) {
-		if id, ok := m["uid"].(int); ok {
-			if cid, ok := m["chat_id"].(int); ok {
+		if id, ok := m["uid"].(int64); ok {
+			if cid, ok := m["chat_id"].(int64); ok {
 				subscriber = entities.UserDetails{
 					ID:         int64(id),
 					Name:       fmt.Sprintf("%v", m["name"]),

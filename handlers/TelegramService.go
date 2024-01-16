@@ -90,6 +90,7 @@ func (t *Telegram) Notify(c *gin.Context) {
 			c.JSON(http.StatusOK, err.Error())
 			return
 		} else {
+		    fmt.Printf("inputs %v\n", reply)
 			if reply.ChatId == 0 && strings.EqualFold(reply.UserName, "") {
 				// send to every subscriber
 				if usrDetails, err := t.TelegramDbClient.GetAllUser(); err != nil || len(usrDetails) == 0 {
@@ -101,7 +102,7 @@ func (t *Telegram) Notify(c *gin.Context) {
 					msgTxt[0] = reply.Text
 					if strings.EqualFold(reply.Text, "") {
 						qp := make(map[string][]string)
-						// qp["top"] = []string{"5"}
+						qp["top"] = []string{"5"}
 						qp["sources"] = []string{"google-news-in"}
 						if news, err := t.GNewsService.GetTopNewsBySourceFromDb(qp, 5); err != nil {
 							fmt.Printf("Error while content creation. Error encountered : %v", err.Error())
