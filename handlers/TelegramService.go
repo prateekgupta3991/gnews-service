@@ -103,7 +103,7 @@ func (t *Telegram) Notify(c *gin.Context) {
 					if strings.EqualFold(reply.Text, "") {
 						qp := make(map[string][]string)
 						qp["top"] = []string{"5"}
-						qp["sources"] = []string{"google-news-in"}
+						qp["sources"] = []string{"google-news-in","the-times-of-india","the-hindu"}
 						if news, err := t.GNewsService.GetTopNewsBySourceFromDb(qp, 5); err != nil {
 							fmt.Printf("Error while content creation. Error encountered : %v", err.Error())
 							return
@@ -117,12 +117,12 @@ func (t *Telegram) Notify(c *gin.Context) {
 						}
 					}
 					for _, usr := range usrDetails {
-						// if usr.ID == 1367340022 || usr.ID == 1815027583 {
-						cid := strconv.Itoa(int(usr.ChatId))
-						for _, txt := range msgTxt {
-							t.CallTelegramSendApi(cid, txt)
+						if usr.ChatId != 0 {
+                            cid := strconv.Itoa(int(usr.ChatId))
+                            for _, txt := range msgTxt {
+                                t.CallTelegramSendApi(cid, txt)
+                            }
 						}
-						// }
 					}
 				}
 			} else if reply.ChatId != 0 && !strings.EqualFold(reply.UserName, "") {

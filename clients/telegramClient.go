@@ -53,12 +53,12 @@ func (c *TelegramClient) Send(qp map[string][]string) (*entities.ReplyResponse, 
 		defer resp.Body.Close()
 		wh := new(entities.ReplyResponse)
 		if body, err := ioutil.ReadAll(resp.Body); err != nil {
-		    fmt.Printf("Error while sending news for chatId - %s  error - %v\n", qp["chat_id"], err.Error())
+		    fmt.Printf("Error while sending news for chatId - %s  error - %s\n", qp["chat_id"], err)
 			return nil, err
 		} else {
 			// fix the unmarshalling here
 			if err := json.Unmarshal(body, &wh); err != nil || !wh.Ok {
-			    fmt.Printf("Marshalling Error while sending news for chatId - %s  error - %v\n", qp["chat_id"], err.Error())
+			    fmt.Printf("Marshalling Error while sending news for chatId - %s  error - %s\n", qp["chat_id"], err)
 				return nil, err
 			} else {
     			fmt.Printf("Successfully sent news for chatId - %s\n", qp["chat_id"])

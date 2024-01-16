@@ -27,7 +27,6 @@ func NewUserDbSession(cassession *gocql.Session) *UserDbSession {
 func (c *UserDbSession) GetUserByTgDetils(tgmId int64, tgmUn string) (entities.UserDetails, error) {
 	m := map[string]interface{}{}
 	query := fmt.Sprintf("SELECT uid, name, t_un, chat_id from user where uid = %d and t_un = '%s'", tgmId, tgmUn)
-	fmt.Println(query)
 	iter := c.DbClient.Query(query).Consistency(gocql.One).Iter()
 	var subscriber entities.UserDetails
 	for iter.MapScan(m) {
@@ -59,7 +58,6 @@ func (c *UserDbSession) GetAllUser() ([]entities.UserDetails, error) {
 	m := map[string]interface{}{}
 	query := "SELECT uid, name, t_un, chat_id from user"
 	iter := c.DbClient.Query(query).Consistency(gocql.One).Iter()
-	fmt.Println("Query is done")
 	defer iter.Close()
 	var subscribers []entities.UserDetails
 	for iter.MapScan(m) {
@@ -84,7 +82,6 @@ func (c *UserDbSession) GetAllUser() ([]entities.UserDetails, error) {
 func (c *UserDbSession) GetUserByTgUn(tgmUn string) (entities.UserDetails, error) {
 	m := map[string]interface{}{}
 	query := fmt.Sprintf("SELECT uid, name, t_un, chat_id from user where t_un = '%s' ALLOW FILTERING", tgmUn)
-	fmt.Println(query)
 	iter := c.DbClient.Query(query).Consistency(gocql.One).Iter()
 	var subscriber entities.UserDetails
 	for iter.MapScan(m) {
