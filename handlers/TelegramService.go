@@ -56,7 +56,7 @@ func (t *Telegram) PushedUpdates(c *gin.Context) {
 				fmt.Printf("Subscriber found with Id : %d and Username : %s\n", subscriber.ID, subscriber.TelegramId)
 			}
 			cid := strconv.Itoa(int(webhookObj.Msg.Chat.Id))
-			t.CallTelegramSendApi(cid, "Your news feed is updated")
+			t.CallTelegramSendApi(cid, "Your news feed is updated", entities.ButtonsInMessage{})
 
 			qp := make(map[string][]string)
 			qp["language"] = []string{"en"}
@@ -65,12 +65,13 @@ func (t *Telegram) PushedUpdates(c *gin.Context) {
 				rId, _ := c.Get("uuid")
 				fmt.Printf("Unable to converse about source preference during requestId : %s", rId)
 			} else {
-				var srcListStr string
+				buttonsList := make([][]entities.Button, 1)
+				srcAsButtons := entities.ButtonsInMessage{buttonsList}
+				srcListStr := "Select the news source"
 				for _, val := range sources.SourceList.Sources {
-					srcListStr = fmt.Sprintf("%s - %s", val.Name, val.Url)
-					fmt.Printf("String representation of the sources value : %s \n", srcListStr)
-					t.CallTelegramSendApi(cid, srcListStr)
+					buttonsList[0] = append(buttonsList[0], entities.Button{val.Name, val.Url})
 				}
+				t.CallTelegramSendApi(cid, srcListStr, srcAsButtons)
 			}
 			c.JSON(http.StatusOK, "OK")
 		}
@@ -90,7 +91,7 @@ func (t *Telegram) Notify(c *gin.Context) {
 			c.JSON(http.StatusOK, err.Error())
 			return
 		} else {
-		    fmt.Printf("inputs %v\n", reply)
+			fmt.Printf("inputs %v\n", reply)
 			if reply.ChatId == 0 && strings.EqualFold(reply.UserName, "") {
 				// send to every subscriber
 				if usrDetails, err := t.TelegramDbClient.GetAllUser(); err != nil || len(usrDetails) == 0 {
@@ -103,7 +104,7 @@ func (t *Telegram) Notify(c *gin.Context) {
 					if strings.EqualFold(reply.Text, "") {
 						qp := make(map[string][]string)
 						qp["top"] = []string{"5"}
-						qp["sources"] = []string{"google-news-in","the-times-of-india","the-hindu"}
+						qp["sources"] = []string{"google-news-in", "the-times-of-india", "the-hindu"}
 						if news, err := t.GNewsService.GetTopNewsBySourceFromDb(qp, 5); err != nil {
 							fmt.Printf("Error while content creation. Error encountered : %v", err.Error())
 							return
@@ -118,21 +119,21 @@ func (t *Telegram) Notify(c *gin.Context) {
 					}
 					for _, usr := range usrDetails {
 						if usr.ChatId != 0 {
-                            cid := strconv.Itoa(int(usr.ChatId))
-                            for _, txt := range msgTxt {
-                                t.CallTelegramSendApi(cid, txt)
-                            }
+							cid := strconv.Itoa(int(usr.ChatId))
+							for _, txt := range msgTxt {
+								t.CallTelegramSendApi(cid, txt, entities.ButtonsInMessage{})
+							}
 						}
 					}
 				}
 			} else if reply.ChatId != 0 && !strings.EqualFold(reply.UserName, "") {
 				// dont fetch usd. directly use the chatId
 				cid := strconv.Itoa(int(reply.ChatId))
-				t.CallTelegramSendApi(cid, reply.Text)
+				t.CallTelegramSendApi(cid, reply.Text, entities.ButtonsInMessage{})
 			} else if strings.EqualFold(reply.UserName, "") {
 				// dont fetch usd. directly use the chatId
 				cid := strconv.Itoa(int(reply.ChatId))
-				t.CallTelegramSendApi(cid, reply.Text)
+				t.CallTelegramSendApi(cid, reply.Text, entities.ButtonsInMessage{})
 			} else {
 				// fetch usd by username
 				if usrDet, err := t.TelegramDbClient.GetUserByTgUn(reply.UserName); err != nil || usrDet.ID == 0 {
@@ -141,7 +142,7 @@ func (t *Telegram) Notify(c *gin.Context) {
 					return
 				} else {
 					cid := strconv.Itoa(int(usrDet.ChatId))
-					t.CallTelegramSendApi(cid, reply.Text)
+					t.CallTelegramSendApi(cid, reply.Text, entities.ButtonsInMessage{})
 				}
 			}
 			c.JSON(http.StatusOK, "OK")
@@ -149,13 +150,19 @@ func (t *Telegram) Notify(c *gin.Context) {
 	}
 }
 
-func (t *Telegram) CallTelegramSendApi(chatId, text string) error {
-	var qp map[string][]string = make(map[string][]string)
+func (t *Telegram) CallTelegramSendApi(chatId, text string, buttons entities.ButtonsInMessage) error {
+	var qp map[string]interface{} = make(map[string]interface{})
 	qp["chat_id"] = []string{chatId}
 	qp["text"] = []string{text}
+	if replyMarkupJSON, err := json.Marshal(buttons); err != nil {
+		fmt.Println("Error while marshalling buttons json")
+	} else {
+		fmt.Println(string(replyMarkupJSON))
+		qp["reply_markup"] = string(replyMarkupJSON)
+	}
 	fmt.Printf("Sending news for chatId - %s\n %s\n", chatId, text)
 	if _, err := t.TelegramClient.Send(qp); err != nil {
-	    fmt.Printf("Error while sending msg %s\n", err)
+		fmt.Printf("Error while sending msg %s\n", err)
 		return err
 	}
 	return nil

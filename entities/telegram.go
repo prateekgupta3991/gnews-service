@@ -49,11 +49,20 @@ type TelegramReplyMsg struct {
 }
 
 type ReplyResponse struct {
-	Ok  bool                `json:"ok"`
+	Ok  bool               `json:"ok"`
 	Res ReplyResultDetails `json:"result"`
 }
 
 type ReplyResultDetails struct {
 	MessageId int64   `json:"message_id"`
 	Msg       Message `json:"message"`
+}
+
+type ButtonsInMessage struct {
+	InlineKeyboard [][]Button `json:"inline_keyboard"`
+}
+
+type Button struct {
+	Text string `json:"text"`
+	Url  string `json:"url"`
 }
