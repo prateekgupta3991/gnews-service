@@ -31,14 +31,14 @@ func prepareBaseUrl(base string, qp map[string]interface{}) string {
 	url.WriteString(base)
 	url.WriteString("?")
 	for idx, val := range qp {
-		fmt.Println("adding query params")
+		// fmt.Println("adding query params")
 		if value, ok := val.([]string); ok {
 			url.WriteString(fmt.Sprintf("%s=%s", idx, value[0]))
 		} else {
 			url.WriteString(fmt.Sprintf("%s=%s", idx, val))
 		}
 		url.WriteString("&")
-		fmt.Println("added query params")
+		// fmt.Println("added query params")
 	}
 	fmt.Println(url.String())
 	return strings.TrimRight(url.String(), "&")

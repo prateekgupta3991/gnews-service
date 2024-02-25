@@ -6,8 +6,9 @@ type Webhook struct {
 }
 
 type Result struct {
-	UpdateId int64   `json:"update_id"`
-	Msg      Message `json:"message"`
+	UpdateId int64         `json:"update_id"`
+	Msg      Message       `json:"message"`
+	Query    CallBackQuery `json:"callback_query"`
 }
 
 type Message struct {
@@ -63,6 +64,16 @@ type ButtonsInMessage struct {
 }
 
 type Button struct {
-	Text string `json:"text"`
-	Url  string `json:"url"`
+	Text         string `json:"text"`
+	Url          string `json:"url"`
+	CallbackData string `json:"callback_data"`
+}
+
+type CallBackQuery struct {
+	Id          string      `json:"id"`
+	From        FromUser    `json:"from"`
+	Chat        ChatDetails `json:"chat"`
+	Msg         Message     `json:"message"`
+	Data        string      `json:"data"`
+	InlineMsgId string      `json:"inline_message_id"`
 }
