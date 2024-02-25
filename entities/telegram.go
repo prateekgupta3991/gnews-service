@@ -6,8 +6,9 @@ type Webhook struct {
 }
 
 type Result struct {
-	UpdateId int64   `json:"update_id"`
-	Msg      Message `json:"message"`
+	UpdateId int64         `json:"update_id"`
+	Msg      Message       `json:"message"`
+	Query    CallBackQuery `json:"callback_query"`
 }
 
 type Message struct {
@@ -49,11 +50,30 @@ type TelegramReplyMsg struct {
 }
 
 type ReplyResponse struct {
-	Ok  bool                `json:"ok"`
+	Ok  bool               `json:"ok"`
 	Res ReplyResultDetails `json:"result"`
 }
 
 type ReplyResultDetails struct {
 	MessageId int64   `json:"message_id"`
 	Msg       Message `json:"message"`
+}
+
+type ButtonsInMessage struct {
+	InlineKeyboard [][]Button `json:"inline_keyboard"`
+}
+
+type Button struct {
+	Text         string `json:"text"`
+	Url          string `json:"url"`
+	CallbackData string `json:"callback_data"`
+}
+
+type CallBackQuery struct {
+	Id          string      `json:"id"`
+	From        FromUser    `json:"from"`
+	Chat        ChatDetails `json:"chat"`
+	Msg         Message     `json:"message"`
+	Data        string      `json:"data"`
+	InlineMsgId string      `json:"inline_message_id"`
 }
