@@ -46,14 +46,28 @@ func (t *Telegram) PushedUpdates(c *gin.Context) {
 			// fmt.Printf("%+v", webhookObj)
 			if webhookObj.Query.Id != "" {
 				fmt.Printf("Inline reply received for subscriber with Id : %d and Username : %s and ChatId : %d\n", webhookObj.Query.From.Id, webhookObj.Query.Msg.Chat.UserName, webhookObj.Query.Msg.Chat.Id)
-				msgTxt, err := t.fetchTopNewsRequest("5", []string{webhookObj.Query.Data})
-				if err != nil {
-					fmt.Printf("Exception due to - %v", err.Error())
-					c.JSON(http.StatusInternalServerError, "InternalServiceError")
-				}
 				cid := strconv.Itoa(int(webhookObj.Query.Msg.Chat.Id))
-				for _, txt := range msgTxt {
-					t.CallTelegramSendApi(cid, txt, entities.ButtonsInMessage{[][]entities.Button{}})
+				if webhookObj.Query.Msg.Text == "Select your country" {
+					msgTxt := []string{"en"}
+					t.sendMessageAsButtonSelectable(msgTxt, cid, "Select your language")
+				} else if webhookObj.Query.Msg.Text == "Select your language" {
+					reqId, _ := c.Get("uuid")
+					if sources, ok := t.fetchNewsSources(reqId, []string{webhookObj.Query.Data}, []string{"in"}); !ok {
+						fmt.Printf("Unable to converse about source preference during requestId : %s", reqId)
+						c.JSON(http.StatusInternalServerError, "InternalServiceError")
+					} else {
+						// fmt.Printf("%+v\n", sources)
+						t.sendMessageAsButtonSelectable(sources, cid, "Select the news source")
+					}
+				} else if webhookObj.Query.Msg.Text == "Select the news source" {
+					msgTxt, err := t.fetchTopNewsRequest("5", []string{webhookObj.Query.Data})
+					if err != nil {
+						fmt.Printf("Exception due to - %v", err.Error())
+						c.JSON(http.StatusInternalServerError, "InternalServiceError")
+					}
+					for _, txt := range msgTxt {
+						t.CallTelegramSendApi(cid, txt, entities.ButtonsInMessage{[][]entities.Button{}})
+					}
 				}
 				c.JSON(http.StatusOK, "OK")
 				return
@@ -74,23 +88,39 @@ func (t *Telegram) PushedUpdates(c *gin.Context) {
 			}
 
 			cid := strconv.Itoa(int(webhookObj.Msg.Chat.Id))
-			// t.CallTelegramSendApi(cid, "Your news feed is updated", entities.ButtonsInMessage{})
-			reqId, _ := c.Get("uuid")
-			if sources, ok := t.fetchNewsSources(reqId, []string{"en"}, []string{"in"}); !ok {
-				fmt.Printf("Unable to converse about source preference during requestId : %s", reqId)
-				c.JSON(http.StatusInternalServerError, "InternalServiceError")
+			if webhookObj.Msg.Text == "Start" {
+				// first command
+				t.CallTelegramSendApi(cid, "Select your country", entities.ButtonsInMessage{[][]entities.Button{}})
+				t.sendMessageAsButtonSelectable([]string{"us", "in"}, cid, "Select your country")
 			} else {
-				buttonsList := make([][]entities.Button, 1)
-				srcAsButtons := entities.ButtonsInMessage{buttonsList}
-				srcListStr := "Select the news source"
-				for _, val := range sources.SourceList.Sources {
-					buttonsList[0] = append(buttonsList[0], entities.Button{val.Name, "", val.Id})
-				}
-				t.CallTelegramSendApi(cid, srcListStr, srcAsButtons)
+				// suggest user the right commands
+				t.CallTelegramSendApi(cid, "Type \"Start\" keyword", entities.ButtonsInMessage{[][]entities.Button{}})
 			}
 			c.JSON(http.StatusOK, "OK")
 		}
 	}
+}
+
+func (t *Telegram) sendMessageAsButtonSelectable(value interface{}, chatId, msgText string) {
+	buttonsList := make([][]entities.Button, 1)
+	valueAsButtons := entities.ButtonsInMessage{buttonsList}
+	valueListStr := msgText
+	// fmt.Printf("%+v\n", value)
+	if sList, ok := value.(*entities.NewsSource); !ok {
+		fmt.Println("Not a sourcelist")
+	} else {
+		for _, val := range sList.Sources {
+			buttonsList[0] = append(buttonsList[0], entities.Button{val.Name, "", val.Id})
+		}
+	}
+	if sList, ok := value.([]string); !ok {
+		fmt.Println("Not a string list")
+	} else {
+		for _, val := range sList {
+			buttonsList[0] = append(buttonsList[0], entities.Button{val, "", val})
+		}
+	}
+	t.CallTelegramSendApi(chatId, valueListStr, valueAsButtons)
 }
 
 func (t *Telegram) Notify(c *gin.Context) {
@@ -114,7 +144,7 @@ func (t *Telegram) Notify(c *gin.Context) {
 					c.JSON(http.StatusOK, err.Error())
 					return
 				} else {
-					msgTxt, err := t.fetchTopNewsRequest("5", []string{"google-news-in", "the-times-of-india", "the-hindu"})
+					msgTxt, err := t.fetchTopNewsRequest("5", []string{"google-news-in", "the-times-of-india", "the-hindu", "associated-press", "financial-post"})
 					if err != nil {
 						fmt.Printf("Exception due to - %v\n", err.Error())
 					}
@@ -180,11 +210,15 @@ func (t *Telegram) fetchTopNewsRequest(newsCount string, sources []string) ([]st
 	} else {
 		msgTxt := make([]string, nc+1)
 		i := 1
-		msgTxt[0] = fmt.Sprintf("Tada...Here is the top %s news for you", newsCount)
-		for _, val := range news {
-			msgTxt[i] = val.NewsDescription + " - " + val.NewsUrl
-			fmt.Println(msgTxt[i])
-			i++
+		if len(news) == 0 {
+			msgTxt[0] = fmt.Sprintf("No news available for the source selected")
+		} else {
+			msgTxt[0] = fmt.Sprintf("Tada...Here is the top %d news for you", len(news))
+			for _, val := range news {
+				msgTxt[i] = val.NewsDescription + " - " + val.NewsUrl
+				fmt.Println(msgTxt[i])
+				i++
+			}
 		}
 		return msgTxt, nil
 	}
