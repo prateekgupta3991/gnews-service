@@ -28,7 +28,8 @@ services:
       container_name: cassandra-load-keyspace
       image: cassandra:3.11
       depends_on:
-        - casdb
+        casdb:
+          condition: service_healthy
       volumes:
         - ./seeds/seed-data.cql:/schema.cql
       command: /bin/bash -c "echo loading cassandra keyspace && cqlsh casdb -f /schema.cql && exit"
