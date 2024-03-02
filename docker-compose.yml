@@ -10,6 +10,7 @@ services:
       - casdb-load-keyspace
     environment:
       - DATABASE_HOST=casdb
+    command: /bin/bash -c "sleep 45"
     networks:
       - backend
   casdb:
@@ -31,12 +32,7 @@ services:
         - casdb
       volumes:
         - ./seeds/seed-data.cql:/schema.cql
-      command: /bin/bash -c "echo loading cassandra keyspace && cqlsh casdb -f /schema.cql && exit"
-      healthcheck:
-        test: ["CMD", "cqlsh","-f /schema.cql && exit"]
-        interval: 15s
-        timeout: 10s
-        retries: 10
+      command: /bin/bash -c "sleep 30 && echo loading cassandra keyspace && cqlsh casdb -f /schema.cql && exit"
       networks:
       - backend
 networks:
